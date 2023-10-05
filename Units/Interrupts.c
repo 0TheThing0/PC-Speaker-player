@@ -9,24 +9,34 @@ inc bx
 
 push bx
 mov [es:Value],ax
+
+
+fild [es:SampleValue]
 fild [es:Value]
 fiadd [es:Sum]
 fmul [es:Coeff]
+fdivp ST1,ST0
 fistp [es:Value]
 
 mov bx,[es:Value]
-cmp bx,150
-ja EndBX
-cmp bx,54
-jb EndBX
+
+
+mov ah,02h
+mov dl,bl
+int 21h
+
+
+
 in al,61h
 test al,3
 jnz A99
 or al, 0000_0011b
 out 61h,al
 
+
 mov al,0b6h
 out 43h,al
+
 ; ƒелитель дл€ 1193181 дл€ получени€ частоты 1193181/x √ц
 ;~100√ц (0x2e9b) ~22050√ц(0036h)
 A99:
@@ -35,10 +45,13 @@ out 42h,al
 mov al,bh
 out 42h,al
 jmp Step
+
 EndBX:
 in al,61h
 and al, 1111_1100b
 out 61h,al
+
+
 Step:
 pop bx
 Endd:

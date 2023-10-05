@@ -13,6 +13,7 @@ call Install_new_interrupt
 push ds
 pop es
 
+
 mov cx,32000
 mov dx,10Eh
 
@@ -46,6 +47,7 @@ include "Units\DataLoader.di"
 WAVFile_Data db 128 dup ?
 WAVFile_Size dd ?
 Enable_Sound db 0
-Coeff dd 0.0055 ;??????    ;0.0008
-Value dw ?
-Sum dd 32800
+Coeff dd  0.305 ;0.0055    ;??????    ;0.0008
+Value dw 0
+Sum dd 34000
+SampleValue dd 1234ddh
