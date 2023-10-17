@@ -1,8 +1,9 @@
 org 100h
 
-BASE_HEAR_SOUND equ 22000
+BASE_HEAR_SOUND equ 24000
 BASE_SAMPLE_VALUE equ 1234ddh
 BASE_SAMPLE_SIZE equ 65535
+SIZE_OFFSET equ 4
 jmp Main
 include "Units\Sound.c"
 include "Units\DataLoader.c"
@@ -12,6 +13,7 @@ Main:
 
 finit
 call Open_File
+call Read_Header
 call Programming_PIT
 call Install_new_interrupt
 
@@ -21,11 +23,16 @@ call Count_Sound_Coeff
 push ds
 pop es
 
-
-mov cx,32000
-mov dx,10Eh
-
 Next_block:
+cmp dword[WAVFile_Data+SIZE_OFFSET],64000
+ja GetFull
+;Get low
+mov cx,word[WAVFile_Data+SIZE_OFFSET]
+shr cx,1
+jmp Next
+GetFull:
+mov cx,32000
+Next:
 xor si,si
 call Load_FilePart
 mov [Enable_Sound],1
@@ -37,11 +44,8 @@ hlt
 loop Looper
 
 mov [Enable_Sound],0
-dec dx
-cmp dx,0
-je _End
-mov cx,32000
-
+cmp dword[WAVFile_Data+SIZE_OFFSET],100
+jbe _End
 
 jmp Next_block
 _End:
@@ -53,8 +57,7 @@ call IRQ_Restore
 ret
 include "Units\Interrupts.di"
 include "Units\DataLoader.di"
-WAVFile_Data db 128 dup ?
-WAVFile_Size dd ?
+WAVFile_Data db 44 dup ?
 Enable_Sound db 0
 
 Value dw 0

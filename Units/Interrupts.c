@@ -12,7 +12,7 @@ lodsw
 
 mov [es:Value],ax
 cmp ax,-32760
-jna EndBX
+jb EndBX
 fld [es:MainCoeff]
 fild [es:Value]
 fiadd [es:Mid]
