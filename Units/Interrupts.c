@@ -1,27 +1,25 @@
 IRQ_Player:
-push ds ax dx
-cmp [Enable_Sound],0
+push ax dx es
+cmp [es:Enable_Sound],0
 je Endd
+push cs
+pop ax
+cmp [es:Code_Segment],ax
+jne Endd
+inc si
+inc si
+mov es,[Current_datapos]
+mov ax,[es:si]
 
-in al,61h
-and al, 1111_1100b
-out 61h,al
-
-mov ds,[Current_datapos]
-lodsw
-
-mov [es:Value],ax
 cmp ax,-32760
 jb EndBX
-fld [es:MainCoeff]
-fild [es:Value]
-fiadd [es:Mid]
+fld [MainCoeff]
+fild word[es:si]
+fiadd [Mid]
 fdivp ST1,ST0
-fistp [es:Value]
+fistp word[es:si]
 
 in al,61h
-test al,3
-jnz A99
 or al, 0000_0011b
 out 61h,al
 
@@ -29,8 +27,8 @@ mov al,0b6h
 out 43h,al
 ; ƒелитель дл€ 1193181 дл€ получени€ частоты 1193181/x √ц
 ;~100√ц (0x2e9b) ~22050√ц(0036h)
-A99:
-mov bx,[es:Value]
+;A99:
+mov bx,[es:si]
 mov al,bl
 out 42h,al
 mov al,bh
@@ -43,10 +41,9 @@ and al, 1111_1100b
 out 61h,al
 
 Endd:
-pop dx ax ds
-
 mov AL,20h
 out 20h,AL
+pop es dx ax
 iret
 
 IRQ_Restore:

@@ -1,4 +1,4 @@
-Current_datapos dw 4000h
+Current_datapos dw ?
 
 File_handler dw ?
 MusicFile db 'data\Music.wav',0
