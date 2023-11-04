@@ -1,93 +1,81 @@
 org 100h
-FileStart = $
-BASE_HEAR_SOUND equ 24000
-BASE_SAMPLE_VALUE equ 1234ddh
-BASE_SAMPLE_SIZE equ 65535
-SIZE_OFFSET equ 4
+BASE_HEAR_SOUND = 24000
+BASE_SAMPLE_VALUE = 1234ddh
+BASE_SAMPLE_SIZE = 65535
+SIZE_OFFSET = 4
 
-EXTRA_SIZE      = 64*1024     ; Allocate 64KiB above stack
-PARA_SIZE       = 16           ; A paragraph = 16 bytes
-EXTRA_SIZE_PARA = (EXTRA_SIZE+PARA_SIZE-1)/PARA_SIZE
+BLOCK_SIZE_IN_BYTES = 32000
+BLOCK_SIZE_IN_CHUNKS = BLOCK_SIZE_IN_BYTES/16
+BLOCK_SIZE_IN_WORD = BLOCK_SIZE_IN_BYTES/2
 
 Main:
 finit
+;Allocating memory for buffer
 call Allocate_Memory
+
+;Openning file
 call Open_File
+
+;Reading header data
 call Read_Header
-call Programming_PIT
-call Install_new_interrupt
 
-
+;Counting sound coeff
 call Count_Sound_Coeff
 
-push ds
-pop es
-mov [Code_Segment],ds
+;Reprogramming PIT for correct rate
+call Programming_PIT
 
-Next_block:
-cmp dword[WAVFile_Data+SIZE_OFFSET],64000
-jae GetFull
-;Get low
-mov cx,word[WAVFile_Data+SIZE_OFFSET]
-shr cx,1
-jmp Next
-GetFull:
-mov cx,32000
+;Set new interrupt
+call Install_new_interrupt
 
-Next:
-xor si,si
-
+;First load
+mov cx,16000
 call Load_FilePart
 
-or al, 0000_0011b
-out 61h,al
+;Music cycle
+mov [EnableSound],1
 
-mov ah,09h
-mov dx,Alright
-int 21h
+Next_block:
+cmp [EndSound],0
+je Next_block
 
-mov [Enable_Sound],1
-Looper:
-hlt
-loop Looper
-mov [Enable_Sound],0
-
-cmp dword[WAVFile_Data+SIZE_OFFSET],100
-jbe _End
-
-jmp Next_block
-_End:
-
+;OFFSound
+mov [EnableSound],0
 mov ah,09h
 mov dx,Done
 int 21h
 
+;OFF pc speaker
 in al,61h
 and al, 1111_1100b
 out 61h,al
+
+;Restore IRQ
 call IRQ_Restore
+;Close file
 call Close_File
+;Asking for memory restoration
 call Restore_memory
 ret
 
-include "Units\Sound.c"
+;include "Units\Sound.c"
 include "Units\DataLoader.c"
 include "Units\Interrupts.c"
 include "Units\Math.c"
 
 include "Units\Interrupts.di"
 include "Units\DataLoader.di"
-WAVFile_Data db 44 dup ?
-Enable_Sound db 0
 
-Code_Segment dw ?
+WAVFileData db 44 dup ?
+EnableSound db 0
+
 Value dw 0
 Mid dd 32769
 MainCoeff dd ?
+
 SamplingSize dd BASE_SAMPLE_SIZE
 SampleValue dd BASE_SAMPLE_VALUE
 SoundCoeff dd BASE_HEAR_SOUND
-Alright db 'alright',13,10,'$'
+SamplingRate dw ?
+EndSound db 0
 Done db 'done$'
-
-FileSize = 1000h

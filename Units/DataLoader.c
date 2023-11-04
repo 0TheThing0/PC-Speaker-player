@@ -1,77 +1,78 @@
 Load_FilePart:
-push dx bx ax cx ds
+        ;In: cx - amount of data in chuncks
+        push dx bx ds
+        mov ah,3fh
+        xor dx,dx
+        mov bx,[es:File_handler]
+        mov ds,[es:sMusicBuffer]
+        int 21h
+        pop ds bx dx
+ret
 
-mov ah,3fh
-shl cx,1
-xor dx,dx
 
-mov bx,[es:File_handler]
-mov ds,[es:Current_datapos]
-int 21h
-
-sub word[es:WAVFile_Data+SIZE_OFFSET],ax
-sbb word[es:WAVFile_Data+SIZE_OFFSET+2],0
-pop ds cx ax bx dx
+Open_File:
+        ;Openning music file for read
+        mov ax,3d00h
+        mov dx,MusicFile
+        int 21h
+        ;ax - file handler
+        mov [File_handler],ax
 ret
 
 Close_File:
-;Close music file
-mov ax,3eh
-mov bx,[File_handler]
-int 21h
-ret
-
-Open_File:
-;Openning music file
-mov ax,3d00h
-mov dx,MusicFile
-int 21h
-mov [File_handler],ax
-ret
-
-Read_WAVHeader:
-push ax bx cx dx
-mov bx,[File_handler]
-mov ah,3fh
-mov cx,128
-mov dx,WAVFile_Data
-int 21h
-pop dx cx bx ax
-
+        ;Close music file
+        mov ax,3eh
+        mov bx,[File_handler]
+        int 21h
 ret
 
 Read_Header:
-        push dx bx ax cx
+        push dx bx cx
+        ;Read first 44 bytes from wav file to get data
         mov ah,3fh
         mov cx,44
-
-        mov dx,WAVFile_Data
+        mov dx,WAVFileData
         mov bx,[File_handler]
         int 21h
 
-        mov ax,word[WAVFile_Data+24]
-        mov [Sampling_Rate],ax
+        ;Reading wav sampling rate
+        mov ax,word[WAVFileData+24]
+        mov [SamplingRate],ax
 
-pop cx ax bx dx
+        ;Lowering file size
+        sub dword[WAVFileData+SIZE_OFFSET],36
+
+        pop cx bx dx
 ret
 
 Allocate_Memory:
-push ax bx
+push bx
+        ;4ah - Shrink a Memory Block, es - segment of an allocated memory block
+        ;bx - size of block in paragraphs(16-byte chunks)
         mov ah,4ah
+        ;1000h*16=65536 - size of programm to save stack
         mov bx,1000h
+        ;!!! Just to be sure that cs=es (but it should be)
+        push cs
+        pop es
+        ;
         int 21h
+        ;in ax - error code, bx - largest block avaible
+        ;Why should I move stack DOWN???!!
 
+        ;48h - allocate memory block, bx - avaible size in chunks
         mov ah,48h
-        mov bx,0500h
+        mov bx,BLOCK_SIZE_IN_CHUNKS
         int 21h
-        mov [Current_datapos],ax
-pop bx ax
+        ;ax - error code or segment addres, bx - avaible size in chunks
+        mov [sMusicBuffer],ax
+pop bx
 ret
 
 Restore_memory:
-push ax bx es
+        push es
         mov ah,49h
-        mov es,[Current_datapos]
+        mov es,[sMusicBuffer]
         int 21h
-pop es bx ax
+        pop es
 ret

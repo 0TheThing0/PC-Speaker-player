@@ -1,93 +1,130 @@
 IRQ_Player:
-push ax dx es
-cmp [es:Enable_Sound],0
-je Endd
-push cs
-pop ax
-cmp [es:Code_Segment],ax
-jne Endd
-inc si
-inc si
-mov es,[Current_datapos]
-mov ax,[es:si]
+       push ax dx cx si es ds
 
-cmp ax,-32760
-jb EndBX
-fld [MainCoeff]
-fild word[es:si]
-fiadd [Mid]
-fdivp ST1,ST0
-fistp word[es:si]
+       push cs
+       pop es
 
-in al,61h
-or al, 0000_0011b
-out 61h,al
+       ;is music on???
+       cmp [es:EnableSound],0
+       je _End
 
-mov al,0b6h
-out 43h,al
-; ƒелитель дл€ 1193181 дл€ получени€ частоты 1193181/x √ц
-;~100√ц (0x2e9b) ~22050√ц(0036h)
-;A99:
-mov bx,[es:si]
-mov al,bl
-out 42h,al
-mov al,bh
-out 42h,al
-jmp Endd
+       ;Getting current offset
+       mov si,[es:oMusicBuffer]
+       cmp si,BLOCK_SIZE_IN_BYTES
+       jb ReadNote
 
-EndBX:
-in al,61h
-and al, 1111_1100b
-out 61h,al
+                ;CMP avaible block with base size
+                cmp dword[es:WAVFileData+SIZE_OFFSET],BLOCK_SIZE_IN_BYTES
+                ja _GetFullChunk
+                ;Get low
+                mov [es:EndSound],1
+                jmp _End
 
-Endd:
-mov AL,20h
-out 20h,AL
-pop es dx ax
+                _GetFullChunk:
+                xor si,si
+                mov [es:oMusicBuffer],0
+
+                sub dword[es:WAVFileData+SIZE_OFFSET],BLOCK_SIZE_IN_BYTES
+                mov cx,BLOCK_SIZE_IN_BYTES
+                call Load_FilePart
+
+ReadNote:
+        mov ds,[es:sMusicBuffer]
+        ; I'm not sure in lodsw. SOMETHING STRANGE
+        mov ax,[ds:si]
+        add [es:oMusicBuffer],2
+
+        ;Music counting
+        ;TO DO: Redo + filter
+        cmp ax,-32760
+        jl _OffSound
+           mov [es:Value],ax
+           fld [es:MainCoeff]
+           fild word[es:Value]
+           fiadd [es:Mid]
+           fdivp ST1,ST0
+           fistp word[es:Value]
+
+        ;Test pc speaker
+        in al,61h
+        ;test al, 0000_0011b
+        ;jnz _AlreadyInclude
+
+           ;Include pc speaker
+           or al, 0000_0011b
+           out 61h,al
+
+_AlreadyInclude:
+        mov al,0b6h
+        out 43h,al
+        ; ƒелитель дл€ 1193181 дл€ получени€ частоты 1193181/x √ц
+        ;~100√ц (0x2e9b) ~22050√ц(0036h)
+
+        mov bx,[es:Value]
+        mov al,bl
+        out 42h,al
+
+        mov al,bh
+        out 42h,al
+        jmp _End
+
+_OffSound:
+        ;in al,61h
+        ;and al, 1111_1100b
+        ;out 61h,al
+_End:
+        mov AL,20h
+        out 20h,AL
+pop ds es si cx dx ax
 iret
 
 IRQ_Restore:
-CLI
-push DS
-mov DX,[IRQ0_Offset]
-mov AX,[IRQ0_Segment]
-mov DS,AX
-mov AH,25h
-mov AL,08h
-int 21h           ;??????????????? ??????
-pop DS
-STI
+        CLI
+        push dx ds
+        mov DX,[IRQ0_Offset]
+        mov DS,[IRQ0_Segment]
+        mov AX,2508h
+        int 21h
+        STI
+        ;mov [Sampling_Rate],65536
+        ;call Programming_PIT
+        pop ds dx
 ret
 
-Install_new_interrupt:
-mov ax,3508h
-int 21h
-mov [IRQ0_Offset],bx
-mov [IRQ0_Segment],es
 
-mov ax,2508h
-mov dx,IRQ_Player
-int 21h
+Install_new_interrupt:
+        push bx dx es
+        ;Get interrupt number (00h to FFh)
+        mov ax,3508h
+        int 21h
+        ;es:bx address of interrupt handler
+        mov [IRQ0_Offset],bx
+        mov [IRQ0_Segment],es
+
+        ;Set new irq interrupt
+        mov ax,2508h
+        mov dx,IRQ_Player
+        int 21h
+        pop es dx bx
 ret
 
 Programming_PIT:
-;In: Sampling rate in [SamplingRate]
-;Use: ax,dx
-push ax dx
-mov dx,12h
-mov ax,34ddh
-div [Sampling_Rate]
-mov dx,ax
+        ;In: Sampling rate in [SamplingRate]
+        push dx
+        mov dx,12h
+        mov ax,34ddh
+        div [SamplingRate]
+        mov dx,ax
 
-mov al,34h
-;0011 0100 ?? разобратьс€, почему 34
-;1011 0110
-out 43h,al
-; ƒелитель дл€ 1193181 дл€ получени€ частоты 1193181/x √ц
-;~100√ц (0x2e9b) ~22050√ц(0036h)
-mov al,dl
-out 40h,al
-mov al,dh
-out 40h,al
-pop dx ax
+        mov al,34h
+        ;0011 0100 ?? разобратьс€, почему 34
+        ;1011 0110
+        out 43h,al
+        ; ƒелитель дл€ 1193181 дл€ получени€ частоты 1193181/x √ц
+        ;~100√ц (0x2e9b) ~22050√ц(0036h)
+        mov al,dl
+        out 40h,al
+        mov al,dh
+        out 40h,al
+        pop dx
 ret
