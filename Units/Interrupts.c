@@ -23,7 +23,6 @@ IRQ_Player:
                 _GetFullChunk:
                 xor si,si
                 mov [es:oMusicBuffer],0
-
                 sub dword[es:WAVFileData+SIZE_OFFSET],BLOCK_SIZE_IN_BYTES
                 mov cx,BLOCK_SIZE_IN_BYTES
                 call Load_FilePart
@@ -36,23 +35,27 @@ ReadNote:
 
         ;Music counting
         ;TO DO: Redo + filter
-        cmp ax,-32760
-        jl _OffSound
-           mov [es:Value],ax
-           fld [es:MainCoeff]
-           fild word[es:Value]
-           fiadd [es:Mid]
-           fdivp ST1,ST0
-           fistp word[es:Value]
+        fild word[ds:si]
+        fiadd [es:Mid]
+        fdivr [es:MainCoeff]
+        fmul [es:NACoeff]
+
+        fild [es:Value]
+        fmul [es:ACoeff]
+
+        faddp ST1, ST0
+        fistp word[es:Value]
+        cmp [es:Value],0
+        je _OffSound
 
         ;Test pc speaker
         in al,61h
         ;test al, 0000_0011b
         ;jnz _AlreadyInclude
 
-           ;Include pc speaker
-           or al, 0000_0011b
-           out 61h,al
+        ;Include pc speaker
+        or al, 0000_0011b
+        out 61h,al
 
 _AlreadyInclude:
         mov al,0b6h
@@ -69,9 +72,9 @@ _AlreadyInclude:
         jmp _End
 
 _OffSound:
-        ;in al,61h
-        ;and al, 1111_1100b
-        ;out 61h,al
+        in al,61h
+        and al, 1111_1100b
+        out 61h,al
 _End:
         mov AL,20h
         out 20h,AL
