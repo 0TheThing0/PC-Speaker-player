@@ -14,6 +14,7 @@ Open_File:
         ;Openning music file for read
         mov ax,3d00h
         mov dx,MusicFile
+        add dx,2
         int 21h
         ;ax - file handler
         mov [File_handler],ax

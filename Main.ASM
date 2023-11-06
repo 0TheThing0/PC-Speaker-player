@@ -15,6 +15,17 @@ finit
 ;Allocating memory for buffer
 call Allocate_Memory
 
+
+;Reading file address
+mov ah,0ah
+mov dx,MusicFile
+int 21h
+
+mov bx,MusicFile
+add bl,byte[MusicFile+1]
+adc bh,0
+add bx,2
+mov byte[bx],0
 ;Openning file
 call Open_File
 

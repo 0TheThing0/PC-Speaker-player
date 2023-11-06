@@ -6,22 +6,36 @@ org 100h
         mov [sDTA],es
         mov [oDTA],bx
 
+        mov cx,10h
+        call OutputFiles
+
+        InputLoop:
         mov ah,0ah
-        mov dx,FilePath
+        mov dx,ChDir
         int 21h
 
-        mov bx,FilePath
-        add bl,byte[FilePath+1]
+        mov bx,ChDir
+        add bl,byte[ChDir+1]
         adc bh,0
         add bx,2
         mov byte[bx],0
 
-        mov ah,4eh
-        mov cx,3
-        mov dx,FilePath
+        mov ah,3bh
+        mov dx,ChDir
         add dx,2
         int 21h
 
+        mov cx,10h
+        call OutputFiles
+
+        jmp InputLoop
+ret
+
+OutputFiles:
+        mov ah,4eh
+        mov dx,FilePath
+        int 21h
+        jc _End
         Looper:
                 mov ds,[sDTA]
                 mov si,[oDTA]
@@ -45,10 +59,12 @@ org 100h
                 mov dx,[oDTA]
                 int 21h
         jnc Looper
+        _End:
 ret
 ;+1eh
 sDTA dw ?
 oDTA dw ?
-FilePath db 254,0,254 dup ?
+FilePath db '*.*',0
+ChDir db 254,0,254 dup ?
 String db 14 dup ?
 EnterPrn  db 13,10,'$'
