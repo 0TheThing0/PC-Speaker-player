@@ -6,8 +6,34 @@ org 100h
         mov [sDTA],es
         mov [oDTA],bx
 
-        mov cx,10h
+        mov ah,19h
+        int 21h
+        mov [DefDrive],al
+        add al,'A'
+        mov di,ChDir
+        stosb
+        mov al,':'
+        stosb
+        mov al,'\'
+        stosb
+
+        mov ah,47h
+        mov dl,0
+        mov si,[ChDirStart]
+        int 21h
+
+        mov di,[ChDirStart]
+        mov al,0
+
+        mov cx,256
+        repne scasb
+        dec di
+
+        mov [ChDirStart],di
+
         call OutputFiles
+
+
 
         InputLoop:
         mov ah,0ah
@@ -32,8 +58,14 @@ org 100h
 ret
 
 OutputFiles:
+        mov di,[ChDirStart]
+        mov si,SearchName
+        mov cx,5
+        rep movsb
+
+        mov cx,10h
         mov ah,4eh
-        mov dx,FilePath
+        mov dx,ChDir
         int 21h
         jc _End
         Looper:
@@ -64,7 +96,10 @@ ret
 ;+1eh
 sDTA dw ?
 oDTA dw ?
-FilePath db '*.*',0
-ChDir db 254,0,254 dup ?
+SearchName db '\*.*',0
 String db 14 dup ?
 EnterPrn  db 13,10,'$'
+Input db 254,0,254 dup ?
+ChDir db 256 dup 0
+ChDirStart dw ChDir+3
+DefDrive db ?

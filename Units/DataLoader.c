@@ -1,12 +1,21 @@
 Load_FilePart:
         ;In: cx - amount of data in chuncks
-        push dx bx ds
-        mov ah,3fh
+        push ds dx bx
+        mov ax,3f00h
         xor dx,dx
-        mov bx,[es:File_handler]
-        mov ds,[es:sMusicBuffer]
+        mov bx,[File_handler]
+        mov ds,[sMusicBuffer]
+        sub dword[es:WAVFileData+SIZE_OFFSET],BLOCK_SIZE_IN_BYTES
         int 21h
-        pop ds bx dx
+
+        push cs
+        pop ds
+        mov ah,09h
+        mov dx,Done
+        int 21h
+
+        mov [LoadData],0
+        pop bx dx ds
 ret
 
 

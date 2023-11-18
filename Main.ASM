@@ -3,7 +3,7 @@ BASE_HEAR_SOUND = 30000
 BASE_SAMPLE_VALUE = 1234ddh
 BASE_SAMPLE_SIZE = 65535
 SIZE_OFFSET = 4
-BASE_A_COEF = 0.2
+BASE_A_COEF = 0.1
 BASE_NA_COEF = 1-BASE_A_COEF
 
 BLOCK_SIZE_IN_BYTES = 64000
@@ -42,13 +42,23 @@ call Programming_PIT
 call Install_new_interrupt
 
 ;First load
-mov cx,16000
+mov cx,BLOCK_SIZE_IN_BYTES
 call Load_FilePart
 
 ;Music cycle
 mov [EnableSound],1
 
 Next_block:
+
+;Getting current offset
+       cmp [LoadData],1
+       jne _Next
+                mov [EnableSound],0
+                mov cx,BLOCK_SIZE_IN_BYTES
+                call Load_FilePart
+                mov [EnableSound],1
+
+_Next:
 cmp [EndSound],0
 je Next_block
 
@@ -93,4 +103,4 @@ ACoeff dd 0.3
 NACoeff dd 0.7
 SamplingRate dw ?
 EndSound db 0
-Done db 'done',13,10,'$'
+Done db 'done ','$'

@@ -3,29 +3,28 @@ IRQ_Player:
 
        push cs
        pop es
-
        ;is music on???
        cmp [es:EnableSound],0
+       je _End
+       cmp [es:EndSound],1
        je _End
 
        ;Getting current offset
        mov si,[es:oMusicBuffer]
        cmp si,BLOCK_SIZE_IN_BYTES
        jb ReadNote
-
                 ;CMP avaible block with base size
                 cmp dword[es:WAVFileData+SIZE_OFFSET],BLOCK_SIZE_IN_BYTES
                 ja _GetFullChunk
                 ;Get low
                 mov [es:EndSound],1
+                mov [es:LoadData],0
                 jmp _End
 
                 _GetFullChunk:
-                xor si,si
                 mov [es:oMusicBuffer],0
-                sub dword[es:WAVFileData+SIZE_OFFSET],BLOCK_SIZE_IN_BYTES
-                mov cx,BLOCK_SIZE_IN_BYTES
-                call Load_FilePart
+                mov [es:LoadData],1
+                jmp _End
 
 ReadNote:
         mov ds,[es:sMusicBuffer]
@@ -82,13 +81,11 @@ pop ds es si cx dx ax
 iret
 
 IRQ_Restore:
-        CLI
         push dx ds
         mov DX,[IRQ0_Offset]
         mov DS,[IRQ0_Segment]
         mov AX,2508h
         int 21h
-        STI
         ;mov [Sampling_Rate],65536
         ;call Programming_PIT
         pop ds dx
@@ -131,3 +128,4 @@ Programming_PIT:
         out 40h,al
         pop dx
 ret
+
