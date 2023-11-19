@@ -1,14 +1,3 @@
-VIDEO_MODE = 03h
-NORMAL_COLOR = 1fh
-CHOOSED_COLOR = 20h
-WINDOW_START_LINE = 6
-WINDOW_LEFT_OFFSET = 2
-LINE_LENGTH = 80
-pWINDOW_START_LINE_OFFSET = WINDOW_START_LINE * LINE_LENGTH + WINDOW_LEFT_OFFSET
-NORMAL_STRING_VIDEO_ATTRIBUTE = 0000_0000_0011_0000b
-NORMAL_STRING_SIZE = 14;36
-MAX_FILES_AMOUNT = 17
-
 SetVideoMode:
         mov ah,0fh
         int 10h
@@ -56,5 +45,30 @@ WriteString:
         inc dh
         mov [CurrentRow],dh
         pop bp cx dx bx
+ret
+
+DrawChooseLine:
+       push es
+
+       push 0xb800
+       pop es
+
+       mov ax,[CurrentFile]
+       mov ax,WINDOW_START_LINE
+       mov bl,160
+       mul bl
+       add ax,WINDOW_LEFT_OFFSET
+       mov bx,ax
+       xor word[es:bx],0x7000
+       inc bx
+       inc bx
+       mov cx,36
+       .Looper:
+             xor  word[es:bx],0x7F00
+             inc bx
+             inc bx
+       loop .Looper
+       xor word[es:bx],0x7000
+       pop es
 ret
 

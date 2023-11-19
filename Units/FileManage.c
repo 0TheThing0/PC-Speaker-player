@@ -1,4 +1,4 @@
-GetDfltDir:
+GetDTA:
         push bx es
         mov ah,2fh
         int 21h
@@ -31,7 +31,6 @@ CreateBaseDirPath:
         ;Finding string end
         mov di,[CurrentDirStart]
         mov al,0
-
         mov cx,256
         repne scasb
         dec di
@@ -40,10 +39,10 @@ CreateBaseDirPath:
         pop si di
 ret
 
-GetDirectoryData:
+CountDirectoryFiles:
         push di si cx dx bx
-
         mov bx,0
+
         ;Adding SearchName to address
         mov di,[CurrentDirStart]
         mov si,SearchName
@@ -55,38 +54,66 @@ GetDirectoryData:
         mov ah,4eh
         mov dx,CurrentDir
         int 21h
-        jc _EndCount
+        jc .EndCount
 
-        _CountLoop:
+        .CountLoop:
                 inc bx
                 mov ah,4fh
                 mov dx,[oDTA]
                 int 21h
-        jnc _CountLoop
-        _EndCount:
-        dec bx
+        jnc .CountLoop
+        .EndCount:
+
         mov [FilesAmount],bx
-        mov [CurrentFile],0
-        mov [FirstShowFile],0
-
         pop bx dx cx si di
-ret
-
+        ret
 OutputDirectory:
+        push bx cx dx
         ;Getting first file
-        mov bx,0
-        mov cx,10h
-        mov ah,4eh
-        mov dx,CurrentDir
-        int 21h
-        jc _End
+        mov bx,[FirstShowFile]
+        mov ax,bx
+        mov dx,0
+        div [KeyPointsSpace]
+
+        mov cx,dx
+        mov dx,KeyPoints
+        mov bl,FileRecInfo_SIZE
+        mul bl
+
+        mov bx,[FirstShowFile]
+        sub bx,cx
+        ;
+        add dx,ax
+
+        push es
+        mov si,dx
+        mov di,[oDTA]
+        mov es,[sDTA]
+
+        mov cx,43
+        rep movsb
+        pop es
+
+        ;
         _Looper:
-                inc bx
+                ;Check on point key
+                mov ax,bx
+                mov dx,0
+                div word[KeyPointsSpace]
+                cmp dx,0
+                jne .SkipElem
+                   call AddToPointKeys
+                .SkipElem:
+                ;
+
                 push bx
                 sub bx,[FirstShowFile]
+                cmp bx,0
+                jl _NoOutput
                 cmp bx,MAX_FILES_AMOUNT
-                ja _NoString
+                jge _End
 
+                ;Output String
                 mov es,[sDTA]
                 mov di,[oDTA]
                 add di,1eh
@@ -101,13 +128,37 @@ OutputDirectory:
                 jne CountSimbols
                 mov [StringLength],cx
                 ;!!!!
+
                 call WriteString
 
-                _NoString:
+                _NoOutput:
                 pop bx
+                inc bx
                 mov ah,4fh
                 mov dx,[oDTA]
                 int 21h
         jnc _Looper
+        jmp _EndProc
+        ;REDO!!!!
         _End:
+                pop bx
+        _EndProc:
+        call DrawChooseLine
+        pop dx cx bx
+ret
+
+AddToPointKeys:
+        push ds di si bx cx
+        mov di,KeyPoints
+
+        mov bl,FileRecInfo_SIZE
+        mul bl
+
+        add di,ax
+        mov si,[oDTA]
+        mov ds,[es:sDTA]
+
+        mov cx,43
+        rep movsb
+        pop cx bx si di ds
 ret
