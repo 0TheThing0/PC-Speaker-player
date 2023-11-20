@@ -30,8 +30,32 @@ SetTemplate:
         pop si di cx es
 ret
 
+ClearWindow:
+        mov cx,MAX_FILES_AMOUNT
+
+        mov dh,[CurrentRow]
+        mov dl,[CurrentColumn]
+        dec dl
+        mov ax,1300h
+        mov bx,RENEW_STRING_VIDEO_ATTRIBUTE
+        mov bp,EmptyString
+
+        .Looper:
+        push cx
+        mov cx,38
+        int 10h
+        pop cx
+        inc dh
+        loop .Looper
+ret
 WriteString:
         push bx dx cx bp
+
+        ;REDO!!!!!!!!!!!!!!!!!!!
+
+        ;!!!!!!!!!!!!!!!!!!!!!1
+
+
         ;1300h int 10h
         mov ax,1300h
         mov bx,NORMAL_STRING_VIDEO_ATTRIBUTE
@@ -48,13 +72,13 @@ WriteString:
 ret
 
 DrawChooseLine:
-       push es
+       push ax es
 
        push 0xb800
        pop es
 
        mov ax,[CurrentFile]
-       mov ax,WINDOW_START_LINE
+       add ax,WINDOW_START_LINE
        mov bl,160
        mul bl
        add ax,WINDOW_LEFT_OFFSET
@@ -69,6 +93,6 @@ DrawChooseLine:
              inc bx
        loop .Looper
        xor word[es:bx],0x7000
-       pop es
+       pop es ax
 ret
 

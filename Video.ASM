@@ -7,6 +7,7 @@ WINDOW_LEFT_OFFSET = 2
 LINE_LENGTH = 80
 pWINDOW_START_LINE_OFFSET = WINDOW_START_LINE * LINE_LENGTH + WINDOW_LEFT_OFFSET
 NORMAL_STRING_VIDEO_ATTRIBUTE = 0000_0000_0011_0000b
+RENEW_STRING_VIDEO_ATTRIBUTE = 0000_0000_0011_1111b
 NORMAL_STRING_SIZE = 14;36
 MAX_FILES_AMOUNT = 17
 
@@ -21,41 +22,19 @@ call SetTemplate
 call GetDTA
 call CreateBaseDirPath
 
-call CountDirectoryFiles
 
-;Counting space between key files
-mov dx,0
-mov ax,[FilesAmount]
-mov bx,KEY_POINTS_AMOUNT
-div bx
-cmp ax,0
-jne .JustAdd
-    inc ax
-.JustAdd:
-mov [KeyPointsSpace],ax
-;
+call OpenDirectory
 
-mov [CurrentFile], 0
-mov [FirstShowFile], 0
-mov [CurrentRow], WINDOW_START_LINE
+MainProcess:
+        call ProcessKeyboard
 
-mov cx,10h
-mov ah,4eh
-mov dx,CurrentDir
-int 21h
-
-mov ax,0
-call AddToPointKeys
-
-
-call OutputDirectory
-
-mov ah,01h
-int 21h
+cmp [EndProg],0
+je MainProcess
 
 call RestoreVideoMode
 ret
 
+include 'Units\Keyboard.c'
 include 'Units\VideoInclude.c'
 include 'Units\FileManage.c'
 
@@ -64,14 +43,15 @@ include 'Units\FileManage.di'
 
 virtual at 0
   SourceFile::
-    file 'Units/BITMAP.BIN'
+    file 'Units\BITMAP.BIN'
 end virtual
 
+KeyPointsSpace dw 0
+KeyPoints db (KeyPoints_SIZE) dup ?
+EndProg db 0
+EmptyString db 221,36 dup ' ',222
 BITMAP:
 repeat 4000
   load x byte from SourceFile: % - 1
   db x
 end repeat
-
-KeyPointsSpace dw 0
-KeyPoints db (KeyPoints_SIZE) dup ?
