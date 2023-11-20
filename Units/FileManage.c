@@ -42,9 +42,8 @@ ret
 
 CreateBaseDirPath:
         push di si
-        mov ah,19h
-        int 21h
-        mov [DefDrive],al
+
+        mov al,[CurrentDrive]
         ;Redo!!!!!
         add al,'A'
         mov di,CurrentDir
@@ -269,8 +268,8 @@ ProcessFile:
        add ax,WINDOW_START_LINE
        mov bl,160
        mul bl
-       add ax,WINDOW_LEFT_OFFSET
-       add ax,WINDOW_LEFT_OFFSET
+       add ax,WINDOW_LEFT_ROW
+       add ax,WINDOW_LEFT_ROW
 
        mov si,ax
        mov di,NameString

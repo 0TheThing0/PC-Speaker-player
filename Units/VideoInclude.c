@@ -81,7 +81,7 @@ DrawChooseLine:
        add ax,WINDOW_START_LINE
        mov bl,160
        mul bl
-       add ax,WINDOW_LEFT_OFFSET
+       add ax,WINDOW_LEFT_ROW
        mov bx,ax
        xor word[es:bx],0x7000
        inc bx
