@@ -1,11 +1,50 @@
 CountDrives:
 push ax bx cx di dx
-mov ah,32h
-mov cl,0
+
+mov di,DrivesList+2
+
+mov cl,[DrivesAmount]
+
+push es
+mov ax,150dh
+mov bx,DrivesList+2
+int 2fh
+pop es
+
+     mov bx,DrivesList+2
+     CDCounter:
+        cmp byte[bx],0
+        je NoCDCount
+    inc byte[bx]
+    mov al,byte[bx]
+    cmp al,[CurrentDrive]
+    jne _NoCurrentCDDrive
+      mov [CurrentDrivePos],cl
+
+    _NoCurrentCDDrive:
+    inc bx
+    inc cx
+    jmp CDCounter
+    NoCDCount:
+
+
 mov di,DrivesList
-mov dl,1
+mov ch,0
+add di,cx
+
+mov ah,32h
+mov dl,3
 
 DirveCountLooper:
+        mov bx,DrivesList
+        SearchingCDDrive:
+                cmp byte[bx],dl
+                je _NoDrive
+        inc bx
+        cmp byte[bx],0
+        jne SearchingCDDrive
+
+        GetNoCDDrive:
         push ds
         int 21h
         pop ds
@@ -13,14 +52,15 @@ DirveCountLooper:
         cmp al,0
         jne _NoDrive
             mov al,dl
-            add al,'@'
             stosb
 
             inc cl
             cmp dl,[CurrentDrive]
             jne _NoCurrentDrive
-                mov [CurrentDrivPos],cl
+                mov [CurrentDrivePos],cl
+                dec byte[CurrentDrivePos]
             _NoCurrentDrive:
+
         _NoDrive:
 inc dl
 cmp dl,27
@@ -52,10 +92,12 @@ CountOffsets:
         jmp .Looper
 
         _OneElem:
-                mov ax,0C0h
+                mov al,0BFh
+                mov cl,00h
         _EndCount:
         inc al
         mov ah,cl
+
         pop cx bx
 ret
 
@@ -66,6 +108,10 @@ OutputDrives:
         pop es
 
         mov di,pDRIVES_START_LINE_OFFSET
+        cmp byte[DrivesAmount],9
+        ja NoAdd
+           add di,160
+        NoAdd:
         mov si,DrivesList
         mov bl,[DrivesAmount]
         DrawLoop:
@@ -89,6 +135,7 @@ OutputDrives:
                 inc di
 
                 inc di
+                add byte[ds:si],'@'
                 movsb
 
                 inc di
@@ -97,11 +144,37 @@ OutputDrives:
 
           loop .Looper
 
-          sub di,ax
-          add di,dx
-          sub di,35
+          sub di,72
           add di,160
        cmp bl,0
        jne DrawLoop
        pop es
+ret
+Empty_INT_24H:
+iret
+
+Remove_INT_24H:
+        push es
+        mov ah,35h
+        mov al,24h
+        int 21h
+        mov [sOLD_INT_24H],es
+        mov [oOLD_INT_24H],bx
+        pop es
+
+        mov ah,25h
+        mov al,24h
+        mov dx,Empty_INT_24H
+        int 21h
+ret
+
+Restore_INT_24H:
+        push ds
+
+        mov ah,25h
+        mov al,24h
+        mov dx,[oOLD_INT_24H]
+        mov ds,[es:sOLD_INT_24H]
+        int 21h
+        pop ds
 ret

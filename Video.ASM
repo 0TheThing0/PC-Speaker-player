@@ -10,6 +10,7 @@ NORMAL_STRING_VIDEO_ATTRIBUTE = 0000_0000_0011_0000b
 RENEW_STRING_VIDEO_ATTRIBUTE = 0000_0000_0011_1111b
 NORMAL_STRING_SIZE = 14;36
 MAX_FILES_AMOUNT = 17
+WINDOWS_AMOUNT = 2
 
 
 ;Drives
@@ -29,21 +30,26 @@ call GetDTA
 
 mov ah,19h
 int 21h
+inc al
 mov [CurrentDrive],al
+
+call Remove_INT_24H
 
 call CountDrives
 
+call OutputDrives
+
 call CreateBaseDirPath
 
-call OutputDrives
+call DrawChooseDrive
 call OpenDirectory
 
 MainProcess:
         call ProcessKeyboard
-
 cmp [EndProg],0
 je MainProcess
 
+call Restore_INT_24H
 call RestoreVideoMode
 ret
 
@@ -52,6 +58,7 @@ include 'Units\Drives.c'
 include 'Units\VideoInclude.c'
 include 'Units\FileManage.c'
 
+include 'Units\Keyboard.di'
 include 'Units\Drives.di'
 include 'Units\VideoInclude.di'
 include 'Units\FileManage.di'

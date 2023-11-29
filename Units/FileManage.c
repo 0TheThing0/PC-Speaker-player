@@ -45,17 +45,19 @@ CreateBaseDirPath:
 
         mov al,[CurrentDrive]
         ;Redo!!!!!
-        add al,'A'
+        add al,'@'
         mov di,CurrentDir
         stosb
         mov al,':'
         stosb
         mov al,'\'
         stosb
+
+        mov [CurrentDirStart],CurrentDir+3
         ;!!!!!
         ;Reading current default directory
         mov ah,47h
-        mov dl,0
+        mov dl,[CurrentDrive]
         mov si,[CurrentDirStart]
         int 21h
 

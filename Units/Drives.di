@@ -1,4 +1,6 @@
 CurrentDrive db ?
-CurrentDrivPos db 0
-DrivesAmount db 0
-DrivesList db 26 dup 0
+CurrentDrivePos db 0
+DrivesAmount db 2
+DrivesList db 1, 2 , 24 dup 0
+sOLD_INT_24H dw ?
+oOLD_INT_24H dw ?

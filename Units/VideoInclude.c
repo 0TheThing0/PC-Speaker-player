@@ -96,3 +96,58 @@ DrawChooseLine:
        pop es ax
 ret
 
+DrawChooseDrive:
+       push es
+
+       mov al,[DrivesAmount]
+       movzx cx,[CurrentDrivePos]
+       mov di,pDRIVES_START_LINE_OFFSET
+
+       cmp al,9
+       ja _NoCorrector
+           add di,160
+           jmp _EndSub
+        _NoCorrector:
+
+
+       _Subber:
+                cmp  cl,9
+                jb _EndSub
+       sub cl,9
+       sub al,9
+       add di,160
+       jmp _Subber
+
+       _EndSub:
+
+       cmp al,9
+       jbe _NoChange
+          mov al,9
+       _NoChange:
+       call CountOffsets ;in al - amount of disks; return in al - between disks, ah - from left and right borders
+
+          shl al,1
+          shl ah,1
+          movzx dx,ah
+          mov ah,0
+
+          add di,dx
+          _PositionLooper:
+                add di,ax
+                add di,4
+          loop _PositionLooper
+
+
+          push 0xb800
+          pop es
+
+          mov cx,3
+          _XOR_Looper:
+          xor word[es:di],0x3000
+          inc di
+          inc di
+          loop _XOR_Looper
+
+        pop es
+ret
+

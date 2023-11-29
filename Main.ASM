@@ -75,10 +75,14 @@ out 61h,al
 
 ;Restore IRQ
 call IRQ_Restore
+
+call Restore_PIT
 ;Close file
 call Close_File
 ;Asking for memory restoration
 call Restore_memory
+
+
 ret
 
 ;include "Units\Sound.c"

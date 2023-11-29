@@ -129,3 +129,15 @@ Programming_PIT:
         pop dx
 ret
 
+Restore_PIT:
+        mov al,34h
+        ;0011 0100 ?? разобратьс€, почему 34
+        ;1011 0110
+        out 43h,al
+        ; ƒелитель дл€ 1193181 дл€ получени€ частоты 1193181/x √ц
+        ;~100√ц (0x2e9b) ~22050√ц(0036h)
+        mov al,0FFh
+        out 40h,al
+        out 40h,al
+ret
+

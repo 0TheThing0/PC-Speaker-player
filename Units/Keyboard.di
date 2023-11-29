@@ -1,0 +1,3 @@
+ProcessKeyWindow dw LeftWindowKey
+WindowFunctions dw LeftWindowKey,DriveWindowKey
+CurrentWindow db 0
