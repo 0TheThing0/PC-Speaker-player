@@ -64,9 +64,6 @@ je Next_block
 
 ;OFFSound
 mov [EnableSound],0
-mov ah,09h
-mov dx,Done
-int 21h
 
 ;OFF pc speaker
 in al,61h
@@ -107,4 +104,3 @@ ACoeff dd 0.3
 NACoeff dd 0.7
 SamplingRate dw ?
 EndSound db 0
-Done db 'done ','$'

@@ -23,7 +23,25 @@ FileRecInfo_SIZE = 43
 KEY_POINTS_AMOUNT = 32
 KeyPoints_SIZE = KEY_POINTS_AMOUNT*FileRecInfo_SIZE
 
+
+;MUSIC
+BASE_HEAR_SOUND = 30000
+BASE_SAMPLE_VALUE = 1234ddh
+BASE_SAMPLE_SIZE = 65535
+SIZE_OFFSET = 4
+BASE_A_COEF = 0.1
+BASE_NA_COEF = 1-BASE_A_COEF
+
+BLOCK_SIZE_IN_BYTES = 64000
+BLOCK_SIZE_IN_CHUNKS = BLOCK_SIZE_IN_BYTES/16
+BLOCK_SIZE_IN_WORD = BLOCK_SIZE_IN_BYTES/2
+
+
+
 org 100h
+;Allocating memory for buffer
+call Allocate_Memory
+
 call SetVideoMode
 call SetTemplate
 call GetDTA
@@ -38,10 +56,10 @@ call Remove_INT_24H
 call CountDrives
 
 call OutputDrives
+call DrawChooseDrive
 
 call CreateBaseDirPath
 
-call DrawChooseDrive
 call OpenDirectory
 
 MainProcess:
@@ -51,17 +69,32 @@ je MainProcess
 
 call Restore_INT_24H
 call RestoreVideoMode
+
+;Asking for memory restoration
+call Restore_memory
 ret
 
 include 'Units\Keyboard.c'
 include 'Units\Drives.c'
 include 'Units\VideoInclude.c'
 include 'Units\FileManage.c'
+include "Units\DataLoader.c"
+include "Units\Interrupts.c"
+include "Units\Math.c"
+include 'Units\PlayPart.c'
 
 include 'Units\Keyboard.di'
 include 'Units\Drives.di'
 include 'Units\VideoInclude.di'
 include 'Units\FileManage.di'
+include 'Units\PlayPart.di'
+
+
+include "Units\Interrupts.di"
+include "Units\DataLoader.di"
+
+
+
 
 virtual at 0
   SourceFile::

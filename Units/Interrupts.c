@@ -5,9 +5,9 @@ IRQ_Player:
        pop es
        ;is music on???
        cmp [es:EnableSound],0
-       je _End
+       je _OffSound
        cmp [es:EndSound],1
-       je _End
+       je _OffSound
 
        ;Getting current offset
        mov si,[es:oMusicBuffer]
@@ -19,12 +19,12 @@ IRQ_Player:
                 ;Get low
                 mov [es:EndSound],1
                 mov [es:LoadData],0
-                jmp _End
+                jmp _RNEnd
 
                 _GetFullChunk:
                 mov [es:oMusicBuffer],0
                 mov [es:LoadData],1
-                jmp _End
+                jmp _RNEnd
 
 ReadNote:
         mov ds,[es:sMusicBuffer]
@@ -68,13 +68,13 @@ _AlreadyInclude:
 
         mov al,bh
         out 42h,al
-        jmp _End
+        jmp _RNEnd
 
 _OffSound:
         in al,61h
         and al, 1111_1100b
         out 61h,al
-_End:
+_RNEnd:
         mov AL,20h
         out 20h,AL
 pop ds es si cx dx ax

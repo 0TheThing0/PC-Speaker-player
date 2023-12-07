@@ -10,9 +10,6 @@ Load_FilePart:
 
         push cs
         pop ds
-        mov ah,09h
-        mov dx,Done
-        int 21h
 
         mov [LoadData],0
         pop bx dx ds
@@ -22,8 +19,7 @@ ret
 Open_File:
         ;Openning music file for read
         mov ax,3d00h
-        mov dx,MusicFile
-        add dx,2
+        mov dx,CurrentDir
         int 21h
         ;ax - file handler
         mov [File_handler],ax
@@ -31,7 +27,7 @@ ret
 
 Close_File:
         ;Close music file
-        mov ax,3eh
+        mov ax,3e00h
         mov bx,[File_handler]
         int 21h
 ret

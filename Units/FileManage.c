@@ -302,5 +302,33 @@ ProcessFile:
           call OpenPrevDir
           jmp EndProcessFile
        NO_DIR:
+          call PlayFile
+
        EndProcessFile:
 ret
+
+
+PlayFile:
+        mov di,[CurrentDirStart]
+
+        mov al,'\'
+        stosb
+
+        mov si,NameString
+        mov cx,14
+        .Looper:
+        cmp byte[si],' '
+        je EndLooperMusic
+        movsb
+        loop .Looper
+        EndLooperMusic:
+        mov al,0
+        movsb
+        ;Openning file
+        call Open_File
+        call PlayMusic
+        call Close_File
+ret
+
+
+
