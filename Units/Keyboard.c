@@ -15,6 +15,7 @@ ProcessKeyboard:
       jmp _NoKey
 
       _SwitchWindow:
+        call [LineDrawFunction]
         movzx ax,[CurrentWindow]
         inc ax
         cmp ax,WINDOWS_AMOUNT
@@ -24,13 +25,19 @@ ProcessKeyboard:
         mov [CurrentWindow],al
 
         mov bx,WindowFunctions
+        mov cx,DrawFunctions
         shl ax,1
         add bx,ax
+        add cx,ax
 
         ;call RecolorWindow
 
         mov ax,[bx]
         mov [ProcessKeyWindow],ax
+        mov bx,cx
+        mov ax,[bx]
+        mov [LineDrawFunction],ax
+        call [LineDrawFunction]
         jmp _NoKey
     Esc_Key:
         mov [EndProg],1
@@ -92,7 +99,7 @@ DriveWindowKey:
 
         call CreateBaseDirPath
         call OpenDirectory
-
+        call DrawChooseLine
         jmp _NoKey_DW
 
       _NoKey_DW:
@@ -107,6 +114,9 @@ LeftWindowKey:
 
       cmp ah,1ch
       je Enter_Key_LW
+
+      cmp ah,1eh
+      je A_Key_LW
 
       jmp _NoKey_LW
 
@@ -131,6 +141,10 @@ LeftWindowKey:
 
     Enter_Key_LW:
         call ProcessFile
+        jmp _NoKey_LW
+
+    A_Key_LW:
+        call AddFile
         jmp _NoKey_LW
 
     ProcessInside:

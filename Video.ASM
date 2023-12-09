@@ -36,12 +36,15 @@ BLOCK_SIZE_IN_BYTES = 64000
 BLOCK_SIZE_IN_CHUNKS = BLOCK_SIZE_IN_BYTES/16
 BLOCK_SIZE_IN_WORD = BLOCK_SIZE_IN_BYTES/2
 
-
+;Playlist
+TRACK_AMOUNT = 50
+FILEPATH_LENGTH = 256
+ALLOCATE_PLAYLIST_MEMORY = TRACK_AMOUNT * FILEPATH_LENGTH /16
 
 org 100h
 ;Allocating memory for buffer
 call Allocate_Memory
-
+call AllocatePlaylistMemory
 call SetVideoMode
 call SetTemplate
 call GetDTA
@@ -56,7 +59,7 @@ call Remove_INT_24H
 call CountDrives
 
 call OutputDrives
-call DrawChooseDrive
+;call DrawChooseDrive
 
 call CreateBaseDirPath
 
@@ -101,6 +104,8 @@ virtual at 0
     file 'Units\BITMAP.BIN'
 end virtual
 
+MaxPlaylistAmount db TRACK_AMOUNT
+CurentPlaylistAmount db 0
 KeyPointsSpace dw 0
 KeyPoints db (KeyPoints_SIZE) dup ?
 EndProg db 0

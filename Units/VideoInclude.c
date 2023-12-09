@@ -71,6 +71,62 @@ WriteString:
         pop bp cx dx bx
 ret
 
+
+WriteAddString:
+        push bx dx cx bp es
+
+        ;REDO!!!!!!!!!!!!!!!!!!!
+
+        ;!!!!!!!!!!!!!!!!!!!!!1
+
+
+        ;1300h int 10h
+        mov ax,1300h
+        movzx cx,bl
+        mov bp,0
+        .Looper:
+                add bp,256
+        loop .Looper
+
+        mov dh,WINDOW_START_LINE
+        add dh,bl
+        sub dh,[FirstShowPlaylistFile]
+        mov dl,41
+        mov es,[PlaylistBuffer]
+        call CountOffset
+        mov bx,NORMAL_STRING_VIDEO_ATTRIBUTE
+        int 10h
+        pop es bp cx dx bx
+ret
+
+CountOffset:
+
+        push dx ax bx ds si
+        mov si,bp
+        mov dx,0
+        mov ds,[PlaylistBuffer]
+
+        mov cx,256
+
+        CountOffsetLooper:
+
+        lodsb
+        cmp al,0
+        je _CountOffsetEnd
+        cmp al,'\'
+        jne NoSlash
+            mov dx,si
+        NoSlash:
+
+        loop CountOffsetLooper
+
+        _CountOffsetEnd:
+        sub si,dx
+        mov cx,si
+        mov bp,dx
+        pop si ds bx ax dx
+
+ret
 DrawChooseLine:
        push ax es
 

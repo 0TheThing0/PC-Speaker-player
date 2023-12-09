@@ -11,3 +11,7 @@ FirstShowFile dw 0
 
 PrevHeadDirPos dw 0
 PrevDirPos dw 0
+
+PlaylistBuffer dw ?
+CurrentPlaylistFile db 0
+FirstShowPlaylistFile db 0

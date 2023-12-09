@@ -80,5 +80,21 @@ Restore_memory:
         mov ah,49h
         mov es,[sMusicBuffer]
         int 21h
+
+        mov ah,49h
+        mov es,[PlaylistBuffer]
+        int 21h
         pop es
+ret
+
+
+AllocatePlaylistMemory:
+push bx
+        ;48h - allocate memory block, bx - avaible size in chunks
+        mov ah,48h
+        mov bx,ALLOCATE_PLAYLIST_MEMORY
+        int 21h
+        ;ax - error code or segment addres, bx - avaible size in chunks
+        mov [PlaylistBuffer],ax
+pop bx
 ret

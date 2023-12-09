@@ -1,3 +1,5 @@
 ProcessKeyWindow dw LeftWindowKey
+LineDrawFunction dw DrawChooseLine
 WindowFunctions dw LeftWindowKey,DriveWindowKey
+DrawFunctions dw DrawChooseLine,DrawChooseDrive
 CurrentWindow db 0

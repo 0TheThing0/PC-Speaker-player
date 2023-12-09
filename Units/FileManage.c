@@ -307,6 +307,85 @@ ProcessFile:
        EndProcessFile:
 ret
 
+AddFile:
+       ;REDO!!!
+       push ds
+
+       push 0xb800
+       pop ds
+
+       mov ax,[es:CurrentFile]
+       add ax,WINDOW_START_LINE
+       mov bl,160
+       mul bl
+       add ax,WINDOW_LEFT_ROW
+       add ax,WINDOW_LEFT_ROW
+
+       mov si,ax
+       mov di,NameString
+       mov cx,14
+       .Looper:
+       movsb
+       inc si
+       loop .Looper
+
+       pop ds
+
+       cmp word[NameString],2e2eh
+       je EndAddFile
+
+       cmp byte[NameString],2eh
+       je EndAddFile
+
+       mov cx,14
+       mov di,NameString
+       mov ax,'.'
+       repne scasb
+       jz _ADD
+       jmp EndAddFile
+       _ADD:
+          push es
+          mov di,[CurrentDirStart]
+          mov al,'\'
+          stosb
+          mov si,NameString
+          mov cx,14
+          .Looper:
+          cmp byte[si],' '
+          je EndADDLooperMusic
+          movsb
+          loop .Looper
+          EndADDLooperMusic:
+          mov si,CurrentDir
+          mov di,0
+          mov es,[PlaylistBuffer]
+          movzx cx,[CurentPlaylistAmount]
+          .Looper:
+                add di,256
+          loop .Looper
+
+          mov cx,256
+          rep movsb
+          mov bl,[CurentPlaylistAmount]
+          pop es
+
+          cmp bl,[FirstShowPlaylistFile]
+          jb _NoPlaylistAdd
+          sub bl,[FirstShowPlaylistFile]
+          cmp bl,MAX_FILES_AMOUNT
+          jae _NoPlaylistAdd
+          PlaylistOutput:
+                mov bl,[CurentPlaylistAmount]
+                call WriteAddString
+
+           _NoPlaylistAdd:
+           inc byte[CurentPlaylistAmount]
+       EndAddFile:
+ret
+
+
+
+
 
 PlayFile:
         mov di,[CurrentDirStart]
@@ -322,8 +401,6 @@ PlayFile:
         movsb
         loop .Looper
         EndLooperMusic:
-        mov al,0
-        movsb
         ;Openning file
         call Open_File
         call PlayMusic
