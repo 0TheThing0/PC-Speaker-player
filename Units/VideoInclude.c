@@ -35,19 +35,19 @@ ClearWindow:
 
         mov dh,[CurrentRow]
         mov dl,[CurrentColumn]
-        dec dl
         mov ax,1300h
         mov bx,RENEW_STRING_VIDEO_ATTRIBUTE
         mov bp,EmptyString
 
         .Looper:
         push cx
-        mov cx,38
+        mov cx,36
         int 10h
         pop cx
         inc dh
         loop .Looper
 ret
+
 WriteString:
         push bx dx cx bp
 
@@ -137,7 +137,7 @@ DrawChooseLine:
        add ax,WINDOW_START_LINE
        mov bl,160
        mul bl
-       add ax,WINDOW_LEFT_ROW
+       add ax,WINDOW_LEFT_COLUMN
        mov bx,ax
        xor word[es:bx],0x7000
        inc bx
@@ -151,6 +151,32 @@ DrawChooseLine:
        xor word[es:bx],0x7000
        pop es ax
 ret
+
+DrawPlaylistLine:
+       push ax es
+
+       push 0xb800
+       pop es
+
+       movzx ax,[CurrentPlaylistFile]
+       add ax,WINDOW_START_LINE
+       mov bl,160
+       mul bl
+       add ax,80
+       mov bx,ax
+       xor word[es:bx],0x7000
+       inc bx
+       inc bx
+       mov cx,37
+       .Looper:
+             xor  word[es:bx],0x7F00
+             inc bx
+             inc bx
+       loop .Looper
+       xor word[es:bx],0x7000
+       pop es ax
+ret
+
 
 DrawChooseDrive:
        push es
@@ -207,3 +233,102 @@ DrawChooseDrive:
         pop es
 ret
 
+DrawPlayScreen:
+       push es
+
+       push 0xb800
+       pop es
+       mov di,PLAYSCREEN_START
+       mov si,PLAYSCREEN
+
+       mov cx,PLAYSCREEN_HEIGHT
+       DrawPlayScreenLoop:
+          push cx
+          mov cx,PLAYSCREEN_WIDTH
+          .Looper:
+                mov ax,[es:di]
+                movsw
+                dec si
+                dec si
+                mov [ds:si],ax
+                inc si
+                inc si
+          loop .Looper
+          add di,82
+          pop cx
+       loop  DrawPlayScreenLoop
+       pop es
+ret
+
+FillTimeScreen:
+       push es
+
+       push 0xb800
+       pop es
+
+       movzx ax,[TrackHours]
+       mov dl,10
+       div dl
+       add ax,'00'
+       stosb
+       inc di
+       mov al,ah
+       stosb
+       add di,3
+
+       movzx ax,[TrackMinutes]
+       mov dl,10
+       div dl
+       add ax,'00'
+       stosb
+       inc di
+       mov al,ah
+       stosb
+       add di,3
+
+       movzx ax,[TrackSeconds]
+       mov dl,10
+       div dl
+       add ax,'00'
+       stosb
+       inc di
+       mov al,ah
+       stosb
+       pop es
+ret
+
+RedrawTimeLine:
+       push es
+
+       push 0xb800
+       pop es
+
+       fild dword[TimeInSeconds]
+       fild dword[FullTime]
+       fdivp ST1,ST0
+       fdiv dword[TimeCoeff]
+       fistp word[DrawPos]
+
+       mov di,PLAYSCREEN_START+(8+160*5)
+       mov cx,[DrawPos]
+       mov ax,1fb1h
+       rep stosw
+       mov ax,1fb2h
+       stosw
+
+       pop es
+ret
+
+ClearTimeLine:
+       push es
+
+       push 0xb800
+       pop es
+
+       mov di,PLAYSCREEN_START+(8+160*5)
+       mov cx,31
+       mov ax,1fb0h
+       rep stosw
+
+       pop es
+ret

@@ -8,6 +8,10 @@ Load_FilePart:
         sub dword[es:WAVFileData+SIZE_OFFSET],BLOCK_SIZE_IN_BYTES
         int 21h
 
+        cmp ax,cx
+        je .Next
+                mov dword[es:WAVFileData+SIZE_OFFSET],0
+        .Next:
         push cs
         pop ds
 
@@ -19,10 +23,9 @@ ret
 Open_File:
         ;Openning music file for read
         mov ax,3d00h
-        mov dx,CurrentDir
         int 21h
         ;ax - file handler
-        mov [File_handler],ax
+        mov [es:File_handler],ax
 ret
 
 Close_File:
@@ -48,6 +51,12 @@ Read_Header:
         ;Lowering file size
         sub dword[WAVFileData+SIZE_OFFSET],36
 
+        fild dword[WAVFileData+SIZE_OFFSET]
+        fidiv word[SamplingRate]
+        fistp dword[TimeInSeconds]
+        shr dword[TimeInSeconds],1
+
+        call Count_Time
         pop cx bx dx
 ret
 

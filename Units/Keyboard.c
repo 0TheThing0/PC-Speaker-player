@@ -123,8 +123,8 @@ LeftWindowKey:
     Up_Key_LW:
         mov ax,-1
         cmp [CurrentFile],0
-        jne ProcessInside
-        call StepUp
+        jne ProcessInside_LW
+        call StepUp_LW
         jmp _NoKey_LW
 
     Down_Key_LW:
@@ -135,8 +135,8 @@ LeftWindowKey:
         jae _NoKey_LW
         mov ax,1
         cmp [CurrentFile],MAX_FILES_AMOUNT-1
-        jne ProcessInside
-        call StepDown
+        jne ProcessInside_LW
+        call StepDown_LW
         jmp _NoKey_LW
 
     Enter_Key_LW:
@@ -147,7 +147,7 @@ LeftWindowKey:
         call AddFile
         jmp _NoKey_LW
 
-    ProcessInside:
+    ProcessInside_LW:
         call DrawChooseLine
         add word[CurrentFile],ax
         call DrawChooseLine
@@ -155,25 +155,98 @@ LeftWindowKey:
 ret
 
 
-StepUp:
+StepUp_LW:
     cmp [FirstShowFile],0
     je .End
     dec word[FirstShowFile]
     mov [CurrentRow], WINDOW_START_LINE
+    call DrawChooseLine
     call OutputDirectory
     call DrawChooseLine
     .End:
 ret
 
-StepDown:
+StepDown_LW:
     mov ax,[FilesAmount]
     sub ax,MAX_FILES_AMOUNT
     cmp [FirstShowFile],ax
     jg .End
     inc word[FirstShowFile]
     mov [CurrentRow], WINDOW_START_LINE
-
+    call DrawChooseLine
     call OutputDirectory
     call DrawChooseLine
+    .End:
+ret
+
+RightWindowKey:
+      cmp ah,48h; Up
+      je Up_Key_RW
+
+      cmp ah,50h
+      je Down_Key_RW
+
+      cmp ah,1ch
+      je Enter_Key_RW
+
+      cmp ah,13h
+      je R_Key_RW
+
+      jmp _NoKey_RW
+
+    Up_Key_RW:
+        mov ax,-1
+        cmp [CurrentPlaylistFile],0
+        jne ProcessInside_RW
+        call StepUp_RW
+        jmp _NoKey_RW
+
+    Down_Key_RW:
+        movzx ax,[FirstShowPlaylistFile]
+        add al,[CurrentPlaylistFile]
+        inc ax
+        cmp al,[CurentPlaylistAmount]
+        jae _NoKey_RW
+        mov ax,1
+        cmp [CurrentPlaylistFile],MAX_FILES_AMOUNT-1
+        jne ProcessInside_RW
+        call StepDown_RW
+        jmp _NoKey_RW
+
+    Enter_Key_RW:
+        call PlayPlaylistFile
+        jmp _NoKey_RW
+
+    R_Key_RW:
+        call AddFile
+        jmp _NoKey_RW
+
+    ProcessInside_RW:
+        call DrawPlaylistLine
+        add byte[CurrentPlaylistFile],al
+        call DrawPlaylistLine
+    _NoKey_RW:
+ret
+
+
+StepUp_RW:
+    cmp [FirstShowPlaylistFile],0
+    je .End
+    dec byte[FirstShowPlaylistFile]
+    call DrawPlaylistLine
+    call OutputPlaylist
+    call DrawPlaylistLine
+    .End:
+ret
+
+StepDown_RW:
+    movzx ax,[CurentPlaylistAmount]
+    sub ax,MAX_FILES_AMOUNT
+    cmp [FirstShowPlaylistFile],al
+    jg .End
+    inc byte[FirstShowPlaylistFile]
+    call DrawPlaylistLine
+    call OutputPlaylist
+    call DrawPlaylistLine
     .End:
 ret

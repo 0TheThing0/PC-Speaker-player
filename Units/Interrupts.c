@@ -3,19 +3,33 @@ IRQ_Player:
 
        push cs
        pop es
+       push cs
+       pop ds
        ;is music on???
        cmp [es:EnableSound],0
        je _OffSound
        cmp [es:EndSound],1
        je _OffSound
 
+
+       inc word[IntAmount]
+       mov ax,[IntAmount]
+       cmp ax,word[SamplingRate]
+       jb .Next
+           mov word[IntAmount],0
+           inc dword[TimeInSeconds]
+           call Count_Time
+           mov di,PLAYSCREEN_START+(2+160*6)
+           call FillTimeScreen
+           call RedrawTimeLine
+       .Next:
        ;Getting current offset
        mov si,[es:oMusicBuffer]
        cmp si,BLOCK_SIZE_IN_BYTES
        jb ReadNote
                 ;CMP avaible block with base size
-                cmp dword[es:WAVFileData+SIZE_OFFSET],BLOCK_SIZE_IN_BYTES
-                ja _GetFullChunk
+                cmp dword[es:WAVFileData+SIZE_OFFSET],0
+                jne _GetFullChunk
                 ;Get low
                 mov [es:EndSound],1
                 mov [es:LoadData],0

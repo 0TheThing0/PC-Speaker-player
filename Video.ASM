@@ -3,14 +3,16 @@ VIDEO_MODE = 03h
 NORMAL_COLOR = 1fh
 CHOOSED_COLOR = 20h
 WINDOW_START_LINE = 6
-WINDOW_LEFT_ROW = 2
+WINDOW_LEFT_COLUMN = 2
+WINDOW_START_LINE = 6
+WINDOW_RIGHT_COLUMN = 41
 LINE_LENGTH = 80
-pWINDOW_START_LINE_OFFSET = WINDOW_START_LINE * LINE_LENGTH + WINDOW_LEFT_ROW
+pWINDOW_START_LINE_OFFSET = WINDOW_START_LINE * LINE_LENGTH + WINDOW_LEFT_COLUMN
 NORMAL_STRING_VIDEO_ATTRIBUTE = 0000_0000_0011_0000b
 RENEW_STRING_VIDEO_ATTRIBUTE = 0000_0000_0011_1111b
 NORMAL_STRING_SIZE = 14;36
 MAX_FILES_AMOUNT = 17
-WINDOWS_AMOUNT = 2
+WINDOWS_AMOUNT = 3
 
 
 ;Drives
@@ -36,12 +38,28 @@ BLOCK_SIZE_IN_BYTES = 64000
 BLOCK_SIZE_IN_CHUNKS = BLOCK_SIZE_IN_BYTES/16
 BLOCK_SIZE_IN_WORD = BLOCK_SIZE_IN_BYTES/2
 
+TIME_COEFF = 0.0322580645
+
 ;Playlist
 TRACK_AMOUNT = 50
 FILEPATH_LENGTH = 256
 ALLOCATE_PLAYLIST_MEMORY = TRACK_AMOUNT * FILEPATH_LENGTH /16
 
+;PlayScreen
+PLAYSCREEN_ROW = 8
+PLAYSCREEN_LINE = 20
+PLAYSCREEN_WIDTH = 39
+PLAYSCREEN_HEIGHT = 9
+PLAYSCREEN_START = (PLAYSCREEN_ROW*80 + PLAYSCREEN_LINE) * 2
+PLAYSCREEN_STAGES = 31
+
 org 100h
+finit
+fstcw [old_state]
+or [old_state], 0000_0010_0000_0000b
+and [old_state], 1111_1110_1111_1111b
+fldcw [old_state]
+
 ;Allocating memory for buffer
 call Allocate_Memory
 call AllocatePlaylistMemory
@@ -64,7 +82,7 @@ call OutputDrives
 call CreateBaseDirPath
 
 call OpenDirectory
-
+;call DrawChooseLine
 MainProcess:
         call ProcessKeyboard
 cmp [EndProg],0
@@ -103,15 +121,26 @@ virtual at 0
   SourceFile::
     file 'Units\BITMAP.BIN'
 end virtual
-
+virtual at 0
+  PlayScreen::
+    file 'Units\PLAYSCREEN.BIN'
+end virtual
 MaxPlaylistAmount db TRACK_AMOUNT
 CurentPlaylistAmount db 0
 KeyPointsSpace dw 0
 KeyPoints db (KeyPoints_SIZE) dup ?
 EndProg db 0
-EmptyString db 221,36 dup ' ',222
+EmptyString db 36 dup ' '
 BITMAP:
 repeat 4000
   load x byte from SourceFile: % - 1
   db x
 end repeat
+
+PLAYSCREEN:
+repeat 702
+  load x byte from PlayScreen: % - 1
+  db x
+end repeat
+
+old_state dw ?

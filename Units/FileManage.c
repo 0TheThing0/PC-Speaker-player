@@ -78,6 +78,7 @@ CreateBaseDirPath:
 ret
 
 OpenNextDir:
+        call DrawChooseLine
         mov di,[CurrentDirStart]
         ;BackSlashSearch:
         ;cmp byte[di],'\'
@@ -108,6 +109,7 @@ OpenNextDir:
 ret
 
 OpenPrevDir:
+        call DrawChooseLine
         mov di,[CurrentDirStart]
         dec di
         BackSlashSearch:
@@ -120,7 +122,7 @@ OpenPrevDir:
         mov [CurrentDirStart],di
 
         call OpenDirectory
-
+        call DrawChooseLine
         mov ax,[PrevDirPos]
         mov [CurrentFile],ax
         mov ax,[PrevHeadDirPos]
@@ -270,8 +272,8 @@ ProcessFile:
        add ax,WINDOW_START_LINE
        mov bl,160
        mul bl
-       add ax,WINDOW_LEFT_ROW
-       add ax,WINDOW_LEFT_ROW
+       add ax,WINDOW_LEFT_COLUMN
+       add ax,WINDOW_LEFT_COLUMN
 
        mov si,ax
        mov di,NameString
@@ -318,8 +320,8 @@ AddFile:
        add ax,WINDOW_START_LINE
        mov bl,160
        mul bl
-       add ax,WINDOW_LEFT_ROW
-       add ax,WINDOW_LEFT_ROW
+       add ax,WINDOW_LEFT_COLUMN
+       add ax,WINDOW_LEFT_COLUMN
 
        mov si,ax
        mov di,NameString
@@ -401,10 +403,48 @@ PlayFile:
         movsb
         loop .Looper
         EndLooperMusic:
+
         ;Openning file
+        mov dx,CurrentDir
         call Open_File
         call PlayMusic
-        call Close_File
+ret
+
+PlayPlaylistFile:
+        movzx cx,[FirstShowPlaylistFile]
+        add cl,[CurrentPlaylistFile]
+        adc ch,0
+        mov dx,0
+        .Looper:
+        add dx,256
+        loop .Looper
+        push ds
+        mov ds,[PlaylistBuffer]
+        call Open_File
+        pop ds
+        call PlayMusic
+ret
+
+OutputPlaylist:
+        push bx cx dx
+        mov al,[CurrentColumn]
+        mov ah,[CurrentRow]
+        mov [CurrentColumn],WINDOW_RIGHT_COLUMN
+        mov [CurrentRow],WINDOW_START_LINE
+        call ClearWindow
+        mov [CurrentColumn],al
+        mov [CurrentRow],ah
+        ;Getting first file
+        mov bl,[FirstShowPlaylistFile]
+        mov cx,MAX_FILES_AMOUNT
+        OutputPlaylistLooper:
+                cmp bl,[CurentPlaylistAmount]
+                jae OutputPlaylistFinal
+                call WriteAddString
+                inc bl
+        loop OutputPlaylistLooper
+        OutputPlaylistFinal:
+        pop dx cx bx
 ret
 
 

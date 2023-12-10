@@ -1,7 +1,22 @@
 PlayMusic:
-
+call DrawPlayScreen
 ;Reading header data
 call Read_Header
+
+;Time
+mov di,PLAYSCREEN_START+(60+160*6)
+call FillTimeScreen
+
+mov di,FullTime
+mov si,TimeInSeconds
+movsd
+
+mov [TimeInSeconds],0
+call Count_Time
+mov di,PLAYSCREEN_START+(2+160*6)
+call FillTimeScreen
+call ClearTimeLine
+call RedrawTimeLine
 
 ;Counting sound coeff
 call Count_Sound_Coeff
@@ -72,4 +87,6 @@ call IRQ_Restore
 
 call Restore_PIT
 
+call Close_File
+call DrawPlayScreen
 ret
