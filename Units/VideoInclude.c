@@ -1,3 +1,65 @@
+DrawRectangle:
+       ;bp+2 - start row, bp+4 - start line, bp+6 - end row, bp+8 - end line bp+10 - color
+       mov bp,sp
+       push es ax bx cx dx
+       push 0xb800
+       pop es
+
+
+       mov ax,[bp+2]
+       mov bx,160
+       mul bx
+
+       add ax,[bp+4]
+       add ax,[bp+4]
+       mov di,ax
+       mov si,ax
+
+       mov cx,[bp+8]
+       sub cx,[bp+4]
+       dec cx
+       dec cx
+       mov bx,cx
+
+       mov ax,[bp+10]
+
+       mov al,0xdb
+       mov cx,bx
+       add cx,2
+       rep stosw
+
+       mov cx,[bp+6]
+       sub cx,[bp+2]
+       dec cx
+       dec cx
+       add si,160
+
+       MainLoop:
+       push cx
+            mov di,si
+            mov al,0xdd
+            stosw
+
+            mov al,20h
+            mov cx,bx
+            rep stosw
+
+            mov al,0xde
+            stosw
+
+            add si,160
+
+       pop cx
+       loop MainLoop
+
+       mov di,si
+       mov al,0xdb
+       mov cx,bx
+       add cx,2
+       rep stosw
+       pop dx cx bx ax es
+ret 10
+
 SetVideoMode:
         mov ah,0fh
         int 10h
@@ -233,30 +295,44 @@ DrawChooseDrive:
         pop es
 ret
 
-DrawPlayScreen:
-       push es
+CopyPlayScreen:
+       push ds
+       push 0xb800
+       pop ds
+       mov si,PLAYSCREEN_START
+       mov di,PLAYSCREEN
 
+       mov cx,PLAYSCREEN_HEIGHT
+       .DrawPlayScreenLoop:
+          push cx
+          mov cx,PLAYSCREEN_WIDTH
+          rep movsw
+          add si,82
+          pop cx
+       loop  .DrawPlayScreenLoop
+       pop ds
+ret
+DrawPlayScreen:
+       call CopyPlayScreen
+       push 1f00h PLAYSCREEN_LINE+PLAYSCREEN_WIDTH PLAYSCREEN_ROW+PLAYSCREEN_HEIGHT PLAYSCREEN_LINE PLAYSCREEN_ROW
+       call DrawRectangle
+ret
+
+RestorePlayScreen:
+       push es
        push 0xb800
        pop es
        mov di,PLAYSCREEN_START
        mov si,PLAYSCREEN
 
        mov cx,PLAYSCREEN_HEIGHT
-       DrawPlayScreenLoop:
+       .DrawPlayScreenLoop:
           push cx
           mov cx,PLAYSCREEN_WIDTH
-          .Looper:
-                mov ax,[es:di]
-                movsw
-                dec si
-                dec si
-                mov [ds:si],ax
-                inc si
-                inc si
-          loop .Looper
+          rep movsw
           add di,82
           pop cx
-       loop  DrawPlayScreenLoop
+       loop  .DrawPlayScreenLoop
        pop es
 ret
 
@@ -274,7 +350,11 @@ FillTimeScreen:
        inc di
        mov al,ah
        stosb
-       add di,3
+       inc di
+
+       mov al,':'
+       stosb
+       inc di
 
        movzx ax,[TrackMinutes]
        mov dl,10
@@ -284,7 +364,11 @@ FillTimeScreen:
        inc di
        mov al,ah
        stosb
-       add di,3
+       inc di
+
+       mov al,':'
+       stosb
+       inc di
 
        movzx ax,[TrackSeconds]
        mov dl,10
@@ -332,3 +416,45 @@ ClearTimeLine:
 
        pop es
 ret
+
+ShowError:
+        ;bp+2 - Error String
+        push ax bx cx dx
+
+
+        call CopyPlayScreen
+        push 4F00h PLAYSCREEN_LINE+PLAYSCREEN_WIDTH PLAYSCREEN_ROW+PLAYSCREEN_HEIGHT PLAYSCREEN_LINE PLAYSCREEN_ROW
+        call DrawRectangle
+
+        mov bp,sp
+        mov bp,[bp+10]
+        mov ax,1300h
+        mov bx,ERROR_STRING_VIDEO_ATTRIBUTE
+        mov cx,37
+        mov dh,PLAYSCREEN_ROW+3
+        mov dl,PLAYSCREEN_LINE+1
+        int 10h
+
+        mov bp,EscPrint
+        mov ax,1300h
+        mov bx,ERROR_STRING_VIDEO_ATTRIBUTE
+        mov cx,7
+        mov dh,PLAYSCREEN_ROW+5
+        mov dl,PLAYSCREEN_LINE+16
+        int 10h
+
+         Error_Key_Looper:
+         mov ah,01h
+         int 16h
+         jz Error_Key_Looper
+            mov ah,00h
+            int 16h
+
+            cmp ah,1h
+            je Esc_Key_Error
+
+         jmp Error_Key_Looper
+         Esc_Key_Error:
+         call RestorePlayScreen
+         pop  dx cx bx ax
+ret 2

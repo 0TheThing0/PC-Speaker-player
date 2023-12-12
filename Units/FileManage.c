@@ -151,7 +151,15 @@ CountDirectoryFiles:
         mov ah,4eh
         mov dx,CurrentDir
         int 21h
-        jc .EndCount
+        jnc .CountLoop
+                push OpenDirError
+                call ShowError
+
+                ;This is very stupid
+                mov ax,4c00h
+                int 21h
+                ;
+        jmp .EndCount
 
         .CountLoop:
                 inc bx
@@ -288,6 +296,9 @@ ProcessFile:
        cmp word[NameString],2e2eh
        je IS_BACK_DIR
 
+       cmp word[NameString],002eh
+       je EndProcessFile
+
        mov cx,14
        mov di,NameString
        mov ax,'.'
@@ -310,6 +321,12 @@ ProcessFile:
 ret
 
 AddFile:
+       cmp [CurrentPlaylistAmount],TRACK_AMOUNT
+       jb .Continue
+           push FilesOverflowError
+           call ShowError
+           jmp EndAddFile
+       .Continue:
        ;REDO!!!
        push ds
 
@@ -361,14 +378,14 @@ AddFile:
           mov si,CurrentDir
           mov di,0
           mov es,[PlaylistBuffer]
-          movzx cx,[CurentPlaylistAmount]
+          movzx cx,[CurrentPlaylistAmount]
           .Looper:
                 add di,256
           loop .Looper
 
           mov cx,256
           rep movsb
-          mov bl,[CurentPlaylistAmount]
+          mov bl,[CurrentPlaylistAmount]
           pop es
 
           cmp bl,[FirstShowPlaylistFile]
@@ -377,16 +394,49 @@ AddFile:
           cmp bl,MAX_FILES_AMOUNT
           jae _NoPlaylistAdd
           PlaylistOutput:
-                mov bl,[CurentPlaylistAmount]
+                mov bl,[CurrentPlaylistAmount]
                 call WriteAddString
 
            _NoPlaylistAdd:
-           inc byte[CurentPlaylistAmount]
+           inc byte[CurrentPlaylistAmount]
        EndAddFile:
 ret
 
 
+RemoveFile:
+        cmp [CurrentPlaylistAmount],0
+        je RemoveFileEnd
+          push ds es
+           mov es,[PlaylistBuffer]
+           mov di,0
+           movzx cx,[FirstShowPlaylistFile]
+           add cl,[CurrentPlaylistFile]
+           adc ch,0
+          .Looper:
+                add di,FILEPATH_LENGTH
+          loop .Looper
+          mov si,di
+          add si,FILEPATH_LENGTH
 
+          movzx cx,[CurrentPlaylistAmount]
+          sub cl,[FirstShowPlaylistFile]
+          sub cl,[CurrentPlaylistFile]
+
+          mov ds,[PlaylistBuffer]
+          .Looper2:
+              push cx
+              mov cx,256
+              rep movsb
+              pop cx
+         loop .Looper2
+
+        pop es ds
+        dec [CurrentPlaylistAmount]
+        call DrawPlaylistLine
+        call OutputPlaylist
+        call DrawPlaylistLine
+        RemoveFileEnd:
+ret
 
 
 PlayFile:
@@ -411,18 +461,59 @@ PlayFile:
 ret
 
 PlayPlaylistFile:
-        movzx cx,[FirstShowPlaylistFile]
-        add cl,[CurrentPlaylistFile]
-        adc ch,0
-        mov dx,0
-        .Looper:
-        add dx,256
-        loop .Looper
-        push ds
-        mov ds,[PlaylistBuffer]
-        call Open_File
-        pop ds
-        call PlayMusic
+        cmp [RandomState],0
+        je .Next
+           call RandomInitialize
+           call InitializeArray
+           mov bx,[OrderPos]
+           mov cl,byte[bx]
+        .Next:
+        PlayPlaylistFileStart:
+                push cx
+                cmp cl,[CurrentPlaylistAmount]
+                jae PlayPlaylistFileEnd
+                mov [EndPlaylist],0
+
+                mov dx,0
+                .Looper:
+                        add dx,256
+                loop .Looper
+
+                push ds
+                mov ds,[PlaylistBuffer]
+                call Open_File
+                pop ds
+                call PlayMusic
+                pop cx
+                cmp [EndPlaylist],1
+                je PlayPlaylistFileEnd
+                        sub cl,[EndPlaylist]
+                        cmp [RandomState],0
+                        je GetNextTrack
+                                inc word[OrderPos]
+                                mov bx,PlayOrder
+                                add bl,byte[CurrentPlaylistAmount]
+                                adc bh,0
+                                cmp word[OrderPos],bx
+                                jb .Next
+                                   mov [OrderPos],PlayOrder
+                                .Next:
+
+                                        mov bx,[OrderPos]
+                                        mov cl,byte[bx]
+                                        dec cl
+                                        jmp PlayPlaylistFileStart
+
+                        GetNextTrack:
+                                inc cl
+                                cmp cl,[CurrentPlaylistAmount]
+                                jb .Next
+                                mov cl,0
+                                .Next:
+
+        jmp PlayPlaylistFileStart
+
+        PlayPlaylistFileEnd:
 ret
 
 OutputPlaylist:
@@ -438,7 +529,7 @@ OutputPlaylist:
         mov bl,[FirstShowPlaylistFile]
         mov cx,MAX_FILES_AMOUNT
         OutputPlaylistLooper:
-                cmp bl,[CurentPlaylistAmount]
+                cmp bl,[CurrentPlaylistAmount]
                 jae OutputPlaylistFinal
                 call WriteAddString
                 inc bl

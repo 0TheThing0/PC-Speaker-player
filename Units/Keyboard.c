@@ -8,6 +8,8 @@ ProcessKeyboard:
       cmp ah,0fh
       je _SwitchWindow
 
+      cmp ah,2ch
+      je _ChangeRandom
       cmp ah,1h
       je Esc_Key
 
@@ -38,6 +40,10 @@ ProcessKeyboard:
         mov ax,[bx]
         mov [LineDrawFunction],ax
         call [LineDrawFunction]
+        jmp _NoKey
+
+    _ChangeRandom:
+        call ChangeRandomState
         jmp _NoKey
     Esc_Key:
         mov [EndProg],1
@@ -94,8 +100,20 @@ DriveWindowKey:
 
         mov al,[bx]
         sub al,'@'
-        mov [CurrentDrive],al
 
+        mov dh,[CurrentDrive]
+        mov [CurrentDrive],al
+        push ds
+        mov ah,32h
+        mov dl,al
+        int 21h
+        pop ds
+        cmp al,0h
+        je NoDriveError
+            push OpenDriveError
+            call ShowError
+            mov [CurrentDrive],dh
+        NoDriveError:
 
         call CreateBaseDirPath
         call OpenDirectory
@@ -205,7 +223,7 @@ RightWindowKey:
         movzx ax,[FirstShowPlaylistFile]
         add al,[CurrentPlaylistFile]
         inc ax
-        cmp al,[CurentPlaylistAmount]
+        cmp al,[CurrentPlaylistAmount]
         jae _NoKey_RW
         mov ax,1
         cmp [CurrentPlaylistFile],MAX_FILES_AMOUNT-1
@@ -214,11 +232,15 @@ RightWindowKey:
         jmp _NoKey_RW
 
     Enter_Key_RW:
+        mov cl,[FirstShowPlaylistFile]
+        add cl,[CurrentPlaylistFile]
         call PlayPlaylistFile
+
+
         jmp _NoKey_RW
 
     R_Key_RW:
-        call AddFile
+        call RemoveFile
         jmp _NoKey_RW
 
     ProcessInside_RW:
@@ -240,7 +262,7 @@ StepUp_RW:
 ret
 
 StepDown_RW:
-    movzx ax,[CurentPlaylistAmount]
+    movzx ax,[CurrentPlaylistAmount]
     sub ax,MAX_FILES_AMOUNT
     cmp [FirstShowPlaylistFile],al
     jg .End

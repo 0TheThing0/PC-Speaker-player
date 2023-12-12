@@ -19,7 +19,6 @@ Load_FilePart:
         pop bx dx ds
 ret
 
-
 Open_File:
         ;Openning music file for read
         mov ax,3d00h
@@ -79,7 +78,14 @@ push bx
         mov ah,48h
         mov bx,BLOCK_SIZE_IN_CHUNKS
         int 21h
+        jnc .End
+            push AllocateMemoryError
+            call ShowError
+            mov ax,4c00h
+            int 21h
+
         ;ax - error code or segment addres, bx - avaible size in chunks
+        .End:
         mov [sMusicBuffer],ax
 pop bx
 ret
@@ -103,6 +109,12 @@ push bx
         mov ah,48h
         mov bx,ALLOCATE_PLAYLIST_MEMORY
         int 21h
+        jnc .End
+            push AllocateMemoryError
+            call ShowError
+            mov ax,4c00h
+            int 21h
+        .End:
         ;ax - error code or segment addres, bx - avaible size in chunks
         mov [PlaylistBuffer],ax
 pop bx

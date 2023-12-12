@@ -9,10 +9,12 @@ WINDOW_RIGHT_COLUMN = 41
 LINE_LENGTH = 80
 pWINDOW_START_LINE_OFFSET = WINDOW_START_LINE * LINE_LENGTH + WINDOW_LEFT_COLUMN
 NORMAL_STRING_VIDEO_ATTRIBUTE = 0000_0000_0011_0000b
+ERROR_STRING_VIDEO_ATTRIBUTE = 0000_0000_0100_0000b
 RENEW_STRING_VIDEO_ATTRIBUTE = 0000_0000_0011_1111b
 NORMAL_STRING_SIZE = 14;36
 MAX_FILES_AMOUNT = 17
 WINDOWS_AMOUNT = 3
+RANDOW_POS = 3992
 
 
 ;Drives
@@ -61,10 +63,12 @@ and [old_state], 1111_1110_1111_1111b
 fldcw [old_state]
 
 ;Allocating memory for buffer
-call Allocate_Memory
-call AllocatePlaylistMemory
 call SetVideoMode
 call SetTemplate
+
+call Allocate_Memory
+call AllocatePlaylistMemory
+
 call GetDTA
 
 mov ah,19h
@@ -81,8 +85,10 @@ call OutputDrives
 
 call CreateBaseDirPath
 
+
 call OpenDirectory
 ;call DrawChooseLine
+
 MainProcess:
         call ProcessKeyboard
 cmp [EndProg],0
@@ -121,12 +127,9 @@ virtual at 0
   SourceFile::
     file 'Units\BITMAP.BIN'
 end virtual
-virtual at 0
-  PlayScreen::
-    file 'Units\PLAYSCREEN.BIN'
-end virtual
+
 MaxPlaylistAmount db TRACK_AMOUNT
-CurentPlaylistAmount db 0
+CurrentPlaylistAmount db 0
 KeyPointsSpace dw 0
 KeyPoints db (KeyPoints_SIZE) dup ?
 EndProg db 0
@@ -137,10 +140,16 @@ repeat 4000
   db x
 end repeat
 
-PLAYSCREEN:
-repeat 702
-  load x byte from PlayScreen: % - 1
-  db x
-end repeat
+OpenFileError:  db      '     This file cannot be played!     '
+OpenDriveError:  db     '    This drive cannot be opened!     '     ;Need to redo drives counting
+OpenDirError:  db       '  This directory cannot be opened!   '     ;Done????
+AllocateMemoryError: db '   Fatal error: Not enough memory!   '     ;Done
+FilesOverflowError:  db '     To many files in playlist!      '     ;Done
+EscPrint db '[ ESC ]'
+PLAYSCREEN: db 702 dup ?
 
+PlayOrder db 50 dup ?
+OrderPos dw ?
+RandSeed dw ?
 old_state dw ?
+EndPlaylist db ?

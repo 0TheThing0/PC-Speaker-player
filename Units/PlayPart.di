@@ -24,3 +24,5 @@ TimeCoeff dd 0.0322580645
 SamplingRate dw ?
 EndSound db 0
 StopSound db 0
+
+RandomState db 0

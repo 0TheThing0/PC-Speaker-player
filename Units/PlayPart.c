@@ -1,4 +1,5 @@
 PlayMusic:
+push cx
 call DrawPlayScreen
 ;Reading header data
 call Read_Header
@@ -60,6 +61,11 @@ Next_block:
                 cmp ah,39h
                 je Space_Music_Key
 
+                cmp ah,77
+                je Forward_Music_Key
+
+                cmp ah,75
+                je Backward_Music_Key
                 jmp _Next
 
                 Space_Music_Key:
@@ -67,7 +73,17 @@ Next_block:
                         xor [EnableSound],1
                         jmp _Next
                 Esc_Music_Key:
-                mov [EndSound],1
+                        mov [EndSound],1
+                        mov [EndPlaylist],1
+                        jmp _Next
+                Forward_Music_Key:
+                        mov [EndSound],1
+                        jmp _Next
+                Backward_Music_Key:
+                        dec word[OrderPos]
+                        mov [EndSound],1
+                        mov [EndPlaylist],2
+
                 jmp _Next
 _Next:
 cmp [EndSound],0
@@ -88,5 +104,15 @@ call IRQ_Restore
 call Restore_PIT
 
 call Close_File
-call DrawPlayScreen
+call RestorePlayScreen
+pop cx
+ret
+
+ChangeRandomState:
+        push es
+        push 0xb800
+        pop es
+        xor byte[es:RANDOW_POS+1],0011b
+        xor [RandomState],1
+        pop es
 ret
