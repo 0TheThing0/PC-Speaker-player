@@ -11,6 +11,7 @@ pWINDOW_START_LINE_OFFSET = WINDOW_START_LINE * LINE_LENGTH + WINDOW_LEFT_COLUMN
 NORMAL_STRING_VIDEO_ATTRIBUTE = 0000_0000_0011_0000b
 ERROR_STRING_VIDEO_ATTRIBUTE = 0000_0000_0100_0000b
 RENEW_STRING_VIDEO_ATTRIBUTE = 0000_0000_0011_1111b
+INFO_STRING_VIDEO_ATTRIBUTE =  0000_0000_0001_1111b
 NORMAL_STRING_SIZE = 14;36
 MAX_FILES_AMOUNT = 17
 WINDOWS_AMOUNT = 3
@@ -101,6 +102,7 @@ call RestoreVideoMode
 call Restore_memory
 ret
 
+include "Units\Metadata.c"
 include 'Units\Keyboard.c'
 include 'Units\Drives.c'
 include 'Units\VideoInclude.c'
@@ -145,7 +147,12 @@ OpenDriveError:  db     '    This drive cannot be opened!     '     ;Need to red
 OpenDirError:  db       '  This directory cannot be opened!   '     ;Done????
 AllocateMemoryError: db '   Fatal error: Not enough memory!   '     ;Done
 FilesOverflowError:  db '     To many files in playlist!      '     ;Done
+BaseName db 'Unknown'
+ArtistString:  db       'Artist:                              '
+TrackString:   db       'Track:                               '
 EscPrint db '[ ESC ]'
+
+include "Units\Metadata.di"
 PLAYSCREEN: db 702 dup ?
 
 PlayOrder db 50 dup ?

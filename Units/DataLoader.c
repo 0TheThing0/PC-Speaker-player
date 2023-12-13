@@ -5,12 +5,12 @@ Load_FilePart:
         xor dx,dx
         mov bx,[File_handler]
         mov ds,[sMusicBuffer]
-        sub dword[es:WAVFileData+SIZE_OFFSET],BLOCK_SIZE_IN_BYTES
+        sub dword[es:DataSize],BLOCK_SIZE_IN_BYTES
         int 21h
 
         cmp ax,cx
         je .Next
-                mov dword[es:WAVFileData+SIZE_OFFSET],0
+                mov dword[es:DataSize],0
         .Next:
         push cs
         pop ds
@@ -32,31 +32,6 @@ Close_File:
         mov ax,3e00h
         mov bx,[File_handler]
         int 21h
-ret
-
-Read_Header:
-        push dx bx cx
-        ;Read first 44 bytes from wav file to get data
-        mov ah,3fh
-        mov cx,44
-        mov dx,WAVFileData
-        mov bx,[File_handler]
-        int 21h
-
-        ;Reading wav sampling rate
-        mov ax,word[WAVFileData+24]
-        mov [SamplingRate],ax
-
-        ;Lowering file size
-        sub dword[WAVFileData+SIZE_OFFSET],36
-
-        fild dword[WAVFileData+SIZE_OFFSET]
-        fidiv word[SamplingRate]
-        fistp dword[TimeInSeconds]
-        shr dword[TimeInSeconds],1
-
-        call Count_Time
-        pop cx bx dx
 ret
 
 Allocate_Memory:

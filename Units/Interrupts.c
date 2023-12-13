@@ -28,7 +28,7 @@ IRQ_Player:
        cmp si,BLOCK_SIZE_IN_BYTES
        jb ReadNote
                 ;CMP avaible block with base size
-                cmp dword[es:WAVFileData+SIZE_OFFSET],0
+                cmp dword[es:DataSize],0
                 jne _GetFullChunk
                 ;Get low
                 mov [es:EndSound],1

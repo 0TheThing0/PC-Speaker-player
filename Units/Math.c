@@ -60,6 +60,7 @@ mov cl,[CurrentPlaylistAmount]
 mov bx,PlayOrder
 .Looper:
         mov byte[bx],cl
+        dec byte[bx]
         inc bx
 loop .Looper
 

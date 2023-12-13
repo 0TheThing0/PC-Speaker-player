@@ -1,4 +1,3 @@
-WAVFileData db 44 dup ?
 EnableSound db 0
 
 Value dw 0

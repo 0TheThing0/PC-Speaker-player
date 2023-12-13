@@ -1,10 +1,49 @@
 PlayMusic:
 push cx
+mov [CurrentOffset],0
+mov [CorrectFile],2
+
+mov si,BaseName
+mov bx,ArtistString+7
+call ClearString
+mov di,ArtistString+7
+mov cx,7
+rep movsb
+
+mov si,BaseName
+mov bx,TrackString+6
+call ClearString
+mov di,TrackString+6
+mov cx,7
+rep movsb
+
+
+call CheckWavStructure
+cmp [CorrectFile],0
+je .Next
+      push OpenFileError
+      call ShowError
+      jmp IncorrectFile
+.Next:
+
+mov ax,4200h
+mov bx,[File_handler]
+mov cx,word[DataChunck+2]
+mov dx,word[DataChunck]
+int 21h
+
 call DrawPlayScreen
 ;Reading header data
-call Read_Header
+;call Read_Header
 
 ;Time
+fild dword[DataSize]
+fidiv word[SamplingRate]
+fistp dword[TimeInSeconds]
+shr dword[TimeInSeconds],1
+
+call Count_Time
+
 mov di,PLAYSCREEN_START+(60+160*6)
 call FillTimeScreen
 
@@ -103,8 +142,9 @@ call IRQ_Restore
 
 call Restore_PIT
 
-call Close_File
 call RestorePlayScreen
+IncorrectFile:
+call Close_File
 pop cx
 ret
 

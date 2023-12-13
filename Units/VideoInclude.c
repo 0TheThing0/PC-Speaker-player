@@ -316,6 +316,23 @@ DrawPlayScreen:
        call CopyPlayScreen
        push 1f00h PLAYSCREEN_LINE+PLAYSCREEN_WIDTH PLAYSCREEN_ROW+PLAYSCREEN_HEIGHT PLAYSCREEN_LINE PLAYSCREEN_ROW
        call DrawRectangle
+
+
+        mov bp,ArtistString
+        mov ax,1300h
+        mov bx,INFO_STRING_VIDEO_ATTRIBUTE
+        mov cx,37
+        mov dh,PLAYSCREEN_ROW+1
+        mov dl,PLAYSCREEN_LINE+1
+        int 10h
+
+        mov bp,TrackString
+        mov ax,1300h
+        mov bx,INFO_STRING_VIDEO_ATTRIBUTE
+        mov cx,37
+        mov dh,PLAYSCREEN_ROW+3
+        mov dl,PLAYSCREEN_LINE+1
+        int 10h
 ret
 
 RestorePlayScreen:

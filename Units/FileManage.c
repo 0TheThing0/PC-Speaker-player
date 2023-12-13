@@ -461,8 +461,12 @@ PlayFile:
 ret
 
 PlayPlaylistFile:
+        cmp cl,[CurrentPlaylistAmount]
+        jae PlayPlaylistFileEnd
+
         cmp [RandomState],0
         je .Next
+
            call RandomInitialize
            call InitializeArray
            mov bx,[OrderPos]
@@ -501,7 +505,6 @@ PlayPlaylistFile:
 
                                         mov bx,[OrderPos]
                                         mov cl,byte[bx]
-                                        dec cl
                                         jmp PlayPlaylistFileStart
 
                         GetNextTrack:
