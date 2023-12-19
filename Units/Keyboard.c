@@ -10,6 +10,10 @@ ProcessKeyboard:
 
       cmp ah,2ch
       je _ChangeRandom
+
+      cmp ah,19h
+      je _PlayPlaylist
+
       cmp ah,1h
       je Esc_Key
 
@@ -45,6 +49,12 @@ ProcessKeyboard:
     _ChangeRandom:
         call ChangeRandomState
         jmp _NoKey
+
+    _PlayPlaylist:
+        mov cl,0
+        call PlayPlaylistFile
+        jmp _NoKey
+
     Esc_Key:
         mov [EndProg],1
 

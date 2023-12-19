@@ -14,7 +14,7 @@ Load_FilePart:
         .Next:
         push cs
         pop ds
-
+        mov [ReadBytesAmount],ax
         mov [LoadData],0
         pop bx dx ds
 ret

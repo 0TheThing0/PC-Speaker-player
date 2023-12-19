@@ -1,5 +1,5 @@
 DrawRectangle:
-       ;bp+2 - start row, bp+4 - start line, bp+6 - end row, bp+8 - end line bp+10 - color
+       ;bp+2 - start row, bp+4 - start line, bp+6 - end row, bp+8 - end line bp+10 - color;
        mov bp,sp
        push es ax bx cx dx
        push 0xb800
@@ -34,7 +34,7 @@ DrawRectangle:
        dec cx
        add si,160
 
-       MainLoop:
+       .MainLoop:
        push cx
             mov di,si
             mov al,0xdd
@@ -50,7 +50,7 @@ DrawRectangle:
             add si,160
 
        pop cx
-       loop MainLoop
+       loop .MainLoop
 
        mov di,si
        mov al,0xdb
@@ -59,6 +59,80 @@ DrawRectangle:
        rep stosw
        pop dx cx bx ax es
 ret 10
+
+DrawLinedRectangle:
+       ;bp+2 - start row, bp+4 - start line, bp+6 - end row, bp+8 - end line
+       mov bp,sp
+       push es ax bx cx dx
+       push 0xb800
+       pop es
+
+
+       mov ax,[bp+2]
+       mov bx,160
+       mul bx
+
+       add ax,[bp+4]
+       add ax,[bp+4]
+       mov di,ax
+       mov si,ax
+
+       mov cx,[bp+8]
+       sub cx,[bp+4]
+       dec cx
+       dec cx
+       mov bx,cx
+
+       mov ah,0x7F
+
+       mov al,0xc9
+       stosw
+
+       mov al,0xcd
+       mov cx,bx
+       rep stosw
+
+       mov al,0xbb
+       stosw
+
+       mov cx,[bp+6]
+       sub cx,[bp+2]
+       dec cx
+       dec cx
+       add si,160
+
+       .MainLoop:
+       push cx
+            mov di,si
+            mov al,0xba
+            stosw
+
+            mov al,20h
+            mov cx,bx
+            rep stosw
+
+            mov al,0xba
+            stosw
+
+            add si,160
+
+       pop cx
+       loop .MainLoop
+
+       mov di,si
+        mov al,0xc8
+       stosw
+
+       mov al,0xcd
+       mov cx,bx
+       rep stosw
+
+       mov al,0xbc
+       stosw
+
+       pop dx cx bx ax es
+ret 8
+
 
 SetVideoMode:
         mov ah,0fh
@@ -82,14 +156,47 @@ RestoreVideoMode:
 ret
 
 SetTemplate:
-        push es cx di si
-        push 0xb800
-        pop es
-        mov di,0
-        mov cx,1000
-        mov si,BITMAP
-        rep movsd
-        pop si di cx es
+       push 37 5 0 0
+       call DrawLinedRectangle
+
+       push 40 25 0 4
+       call DrawLinedRectangle
+
+       push 3f00h 39 24 1 5
+       call DrawRectangle
+
+       push 80 25 39 4
+       call DrawLinedRectangle
+
+       push 3f00h 79 24 40 5
+       call DrawRectangle
+
+       push es
+       push 0xb800
+       pop es
+           mov si,ASSIST
+
+           mov di,640
+           mov ax,0x7FCC
+           stosw
+
+           mov di,3840
+           mov cx,40
+           rep movsd
+
+           mov si,LOGO
+           mov di,72
+           mov cx,5
+           .Looper:
+                push cx
+                mov cx,22
+                rep movsd
+                add di,72
+                pop cx
+            loop .Looper
+
+
+       pop es
 ret
 
 ClearWindow:
@@ -426,11 +533,17 @@ ClearTimeLine:
        push 0xb800
        pop es
 
-       mov di,PLAYSCREEN_START+(8+160*5)
-       mov cx,31
+
+       mov di,PLAYSCREEN_START+(4+160*5)
+       mov ax,1f11h
+       stosw
+       stosw
+       mov cx,32
        mov ax,1fb0h
        rep stosw
-
+       mov ax,1f10h
+       stosw
+       stosw
        pop es
 ret
 

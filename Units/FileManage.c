@@ -466,7 +466,8 @@ PlayPlaylistFile:
 
         cmp [RandomState],0
         je .Next
-
+           cmp [CurrentPlaylistAmount],1
+           je .Next
            call RandomInitialize
            call InitializeArray
            mov bx,[OrderPos]

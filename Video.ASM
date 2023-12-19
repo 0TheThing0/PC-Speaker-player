@@ -126,8 +126,13 @@ include "Units\DataLoader.di"
 
 
 virtual at 0
-  SourceFile::
-    file 'Units\BITMAP.BIN'
+  LogoFile::
+    file 'Units\LOGO.BIN'
+end virtual
+
+virtual at 0
+  AssistFile::
+    file 'Units\ASSIST.BIN'
 end virtual
 
 MaxPlaylistAmount db TRACK_AMOUNT
@@ -136,11 +141,19 @@ KeyPointsSpace dw 0
 KeyPoints db (KeyPoints_SIZE) dup ?
 EndProg db 0
 EmptyString db 36 dup ' '
-BITMAP:
-repeat 4000
-  load x byte from SourceFile: % - 1
+
+ASSIST:
+repeat 160
+  load x byte from AssistFile: % - 1
   db x
 end repeat
+
+LOGO:
+repeat 440
+  load x byte from LogoFile: % - 1
+  db x
+end repeat
+
 
 OpenFileError:  db      '     This file cannot be played!     '
 OpenDriveError:  db     '    This drive cannot be opened!     '     ;Need to redo drives counting
@@ -154,7 +167,6 @@ EscPrint db '[ ESC ]'
 
 include "Units\Metadata.di"
 PLAYSCREEN: db 702 dup ?
-
 PlayOrder db 50 dup ?
 OrderPos dw ?
 RandSeed dw ?

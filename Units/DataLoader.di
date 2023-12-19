@@ -1,3 +1,4 @@
+ReadBytesAmount dw ?
 sMusicBuffer dw ?
 oMusicBuffer dw 0
 File_handler dw ?

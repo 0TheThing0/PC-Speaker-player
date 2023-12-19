@@ -25,7 +25,7 @@ IRQ_Player:
        .Next:
        ;Getting current offset
        mov si,[es:oMusicBuffer]
-       cmp si,BLOCK_SIZE_IN_BYTES
+       cmp si,[es:ReadBytesAmount]
        jb ReadNote
                 ;CMP avaible block with base size
                 cmp dword[es:DataSize],0
@@ -38,7 +38,7 @@ IRQ_Player:
                 _GetFullChunk:
                 mov [es:oMusicBuffer],0
                 mov [es:LoadData],1
-                jmp _RNEnd
+                jmp _OffSound
 
 ReadNote:
         mov ds,[es:sMusicBuffer]
@@ -52,7 +52,6 @@ ReadNote:
         fiadd [es:Mid]
         fdivr [es:MainCoeff]
         fmul [es:NACoeff]
-
         fild [es:Value]
         fmul [es:ACoeff]
 
