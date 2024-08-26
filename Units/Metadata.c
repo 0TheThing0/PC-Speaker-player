@@ -48,7 +48,6 @@
 ; 0 - 3 'data'
 ; 4 - 7 Size
 
-; What is id3????
 ReadChunckInfo:
         add dword[CurrentOffset],8
         mov ax,3f00h

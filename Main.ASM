@@ -1,4 +1,35 @@
-org 100h
+;Video params
+VIDEO_MODE = 03h
+NORMAL_COLOR = 1fh
+CHOOSED_COLOR = 20h
+WINDOW_START_LINE = 6
+WINDOW_LEFT_COLUMN = 2
+WINDOW_START_LINE = 6
+WINDOW_RIGHT_COLUMN = 41
+LINE_LENGTH = 80
+pWINDOW_START_LINE_OFFSET = WINDOW_START_LINE * LINE_LENGTH + WINDOW_LEFT_COLUMN
+NORMAL_STRING_VIDEO_ATTRIBUTE = 0000_0000_0011_0000b
+ERROR_STRING_VIDEO_ATTRIBUTE = 0000_0000_0100_0000b
+RENEW_STRING_VIDEO_ATTRIBUTE = 0000_0000_0011_1111b
+INFO_STRING_VIDEO_ATTRIBUTE =  0000_0000_0001_1111b
+NORMAL_STRING_SIZE = 14;36
+MAX_FILES_AMOUNT = 17
+WINDOWS_AMOUNT = 3
+RANDOW_POS = 3992
+
+
+;Drives
+DRIVES_START_LINE = 1
+DRIVES_START_ROW = 1
+pDRIVES_START_LINE_OFFSET = DRIVES_START_LINE * LINE_LENGTH * 2 + DRIVES_START_ROW*2
+
+;Struct Size
+FileRecInfo_SIZE = 43
+KEY_POINTS_AMOUNT = 32
+KeyPoints_SIZE = KEY_POINTS_AMOUNT*FileRecInfo_SIZE
+
+
+;MUSIC
 BASE_HEAR_SOUND = 30000
 BASE_SAMPLE_VALUE = 1234ddh
 BASE_SAMPLE_SIZE = 65535
@@ -10,97 +41,134 @@ BLOCK_SIZE_IN_BYTES = 64000
 BLOCK_SIZE_IN_CHUNKS = BLOCK_SIZE_IN_BYTES/16
 BLOCK_SIZE_IN_WORD = BLOCK_SIZE_IN_BYTES/2
 
-Main:
+TIME_COEFF = 0.0322580645
+
+;Playlist
+TRACK_AMOUNT = 50
+FILEPATH_LENGTH = 256
+ALLOCATE_PLAYLIST_MEMORY = TRACK_AMOUNT * FILEPATH_LENGTH /16
+
+;PlayScreen
+PLAYSCREEN_ROW = 8
+PLAYSCREEN_LINE = 20
+PLAYSCREEN_WIDTH = 39
+PLAYSCREEN_HEIGHT = 9
+PLAYSCREEN_START = (PLAYSCREEN_ROW*80 + PLAYSCREEN_LINE) * 2
+PLAYSCREEN_STAGES = 31
+
+org 100h
 finit
+fstcw [old_state]
+or [old_state], 0000_0010_0000_0000b
+and [old_state], 1111_1110_1111_1111b
+fldcw [old_state]
+
 ;Allocating memory for buffer
+call SetVideoMode
+call SetTemplate
+
 call Allocate_Memory
+call AllocatePlaylistMemory
 
+call GetDTA
 
-;Reading file address
-mov ah,0ah
-mov dx,MusicFile
+mov ah,19h
 int 21h
+inc al
+mov [CurrentDrive],al
 
-mov bx,MusicFile
-add bl,byte[MusicFile+1]
-adc bh,0
-add bx,2
-mov byte[bx],0
-;Openning file
-call Open_File
+call Remove_INT_24H
 
-;Reading header data
-call Read_Header
+call CountDrives
 
-;Counting sound coeff
-call Count_Sound_Coeff
+call OutputDrives
+;call DrawChooseDrive
 
-;Reprogramming PIT for correct rate
-call Programming_PIT
+call CreateBaseDirPath
 
-;Set new interrupt
-call Install_new_interrupt
 
-;First load
-mov cx,BLOCK_SIZE_IN_BYTES
-call Load_FilePart
+call OpenDirectory
+;call DrawChooseLine
 
-;Music cycle
-mov [EnableSound],1
+MainProcess:
+        call ProcessKeyboard
+cmp [EndProg],0
+je MainProcess
 
-Next_block:
+call Restore_INT_24H
+call RestoreVideoMode
 
-;Getting current offset
-       cmp [LoadData],1
-       jne _Next
-                mov [EnableSound],0
-                mov cx,BLOCK_SIZE_IN_BYTES
-                call Load_FilePart
-                mov [EnableSound],1
-
-_Next:
-cmp [EndSound],0
-je Next_block
-
-;OFFSound
-mov [EnableSound],0
-
-;OFF pc speaker
-in al,61h
-and al, 1111_1100b
-out 61h,al
-
-;Restore IRQ
-call IRQ_Restore
-
-call Restore_PIT
-;Close file
-call Close_File
 ;Asking for memory restoration
 call Restore_memory
-
-
 ret
 
-;include "Units\Sound.c"
+include "Units\Metadata.c"
+include 'Units\Keyboard.c'
+include 'Units\Drives.c'
+include 'Units\VideoInclude.c'
+include 'Units\FileManage.c'
 include "Units\DataLoader.c"
 include "Units\Interrupts.c"
 include "Units\Math.c"
+include 'Units\PlayPart.c'
+
+include 'Units\Keyboard.di'
+include 'Units\Drives.di'
+include 'Units\VideoInclude.di'
+include 'Units\FileManage.di'
+include 'Units\PlayPart.di'
+
 
 include "Units\Interrupts.di"
 include "Units\DataLoader.di"
 
-WAVFileData db 44 dup ?
-EnableSound db 0
 
-Value dw 0
-Mid dd 32769
-MainCoeff dd ?
 
-SamplingSize dd BASE_SAMPLE_SIZE
-SampleValue dd BASE_SAMPLE_VALUE
-SoundCoeff dd BASE_HEAR_SOUND
-ACoeff dd 0.3
-NACoeff dd 0.7
-SamplingRate dw ?
-EndSound db 0
+
+virtual at 0
+  LogoFile::
+    file 'Units\LOGO.BIN'
+end virtual
+
+virtual at 0
+  AssistFile::
+    file 'Units\ASSIST.BIN'
+end virtual
+
+MaxPlaylistAmount db TRACK_AMOUNT
+CurrentPlaylistAmount db 0
+KeyPointsSpace dw 0
+KeyPoints db (KeyPoints_SIZE) dup ?
+EndProg db 0
+EmptyString db 36 dup ' '
+
+ASSIST:
+repeat 160
+  load x byte from AssistFile: % - 1
+  db x
+end repeat
+
+LOGO:
+repeat 440
+  load x byte from LogoFile: % - 1
+  db x
+end repeat
+
+
+OpenFileError:  db      '     This file cannot be played!     '
+OpenDriveError:  db     '    This drive cannot be opened!     '     ;Need to redo drives counting
+OpenDirError:  db       '  This directory cannot be opened!   '     ;Done????
+AllocateMemoryError: db '   Fatal error: Not enough memory!   '     ;Done
+FilesOverflowError:  db '     To many files in playlist!      '     ;Done
+BaseName db 'Unknown'
+ArtistString:  db       'Artist:                              '
+TrackString:   db       'Track:                               '
+EscPrint db '[ ESC ]'
+
+include "Units\Metadata.di"
+PLAYSCREEN: db 702 dup ?
+PlayOrder db 50 dup ?
+OrderPos dw ?
+RandSeed dw ?
+old_state dw ?
+EndPlaylist db ?
