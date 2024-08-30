@@ -1,4 +1,4 @@
-DrawRectangle:
+Draw_Rectangle:
        ;bp+2 - start row, bp+4 - start line, bp+6 - end row, bp+8 - end line bp+10 - color;
        mov bp,sp
        push es ax bx cx dx
@@ -60,7 +60,7 @@ DrawRectangle:
        pop dx cx bx ax es
 ret 10
 
-DrawLinedRectangle:
+Draw_LinedRectangle:
        ;bp+2 - start row, bp+4 - start line, bp+6 - end row, bp+8 - end line
        mov bp,sp
        push es ax bx cx dx
@@ -134,7 +134,7 @@ DrawLinedRectangle:
 ret 8
 
 
-SetVideoMode:
+Set_VideoMode:
         mov ah,0fh
         int 10h
         mov [OldVideoMode],al
@@ -148,28 +148,28 @@ SetVideoMode:
         int 10h
 ret
 
-RestoreVideoMode:
+Restore_VideoMode:
         ;Restore old video mode (without old page)
         mov ah,00h
         mov al,[OldVideoMode]
         int 10h
 ret
 
-SetTemplate:
+Set_Template:
        push 37 5 0 0
-       call DrawLinedRectangle
+       call Draw_LinedRectangle
 
        push 40 25 0 4
-       call DrawLinedRectangle
+       call Draw_LinedRectangle
 
        push 3f00h 39 24 1 5
-       call DrawRectangle
+       call Draw_Rectangle
 
        push 80 25 39 4
-       call DrawLinedRectangle
+       call Draw_LinedRectangle
 
        push 3f00h 79 24 40 5
-       call DrawRectangle
+       call Draw_Rectangle
 
        push es
        push 0xb800
@@ -199,7 +199,7 @@ SetTemplate:
        pop es
 ret
 
-ClearWindow:
+Clear_Window:
         mov cx,MAX_FILES_AMOUNT
 
         mov dh,[CurrentRow]
@@ -217,7 +217,7 @@ ClearWindow:
         loop .Looper
 ret
 
-WriteString:
+Write_String:
         push bx dx cx bp
 
         ;REDO!!!!!!!!!!!!!!!!!!!
@@ -241,7 +241,7 @@ WriteString:
 ret
 
 
-WriteAddString:
+Write_AddString:
         push bx dx cx bp es
 
         ;REDO!!!!!!!!!!!!!!!!!!!
@@ -262,13 +262,13 @@ WriteAddString:
         sub dh,[FirstShowPlaylistFile]
         mov dl,41
         mov es,[PlaylistBuffer]
-        call CountOffset
+        call Count_Offset
         mov bx,NORMAL_STRING_VIDEO_ATTRIBUTE
         int 10h
         pop es bp cx dx bx
 ret
 
-CountOffset:
+Count_Offset:
 
         push dx ax bx ds si
         mov si,bp
@@ -296,7 +296,7 @@ CountOffset:
         pop si ds bx ax dx
 
 ret
-DrawChooseLine:
+Draw_ChooseLine:
        push ax es
 
        push 0xb800
@@ -321,7 +321,7 @@ DrawChooseLine:
        pop es ax
 ret
 
-DrawPlaylistLine:
+Draw_PlaylistLine:
        push ax es
 
        push 0xb800
@@ -347,7 +347,7 @@ DrawPlaylistLine:
 ret
 
 
-DrawChooseDrive:
+Draw_ChooseDrive:
        push es
 
        mov al,[DrivesAmount]
@@ -402,7 +402,7 @@ DrawChooseDrive:
         pop es
 ret
 
-CopyPlayScreen:
+Copy_PlayScreen:
        push ds
        push 0xb800
        pop ds
@@ -420,9 +420,9 @@ CopyPlayScreen:
        pop ds
 ret
 DrawPlayScreen:
-       call CopyPlayScreen
+       call Copy_PlayScreen
        push 1f00h PLAYSCREEN_LINE+PLAYSCREEN_WIDTH PLAYSCREEN_ROW+PLAYSCREEN_HEIGHT PLAYSCREEN_LINE PLAYSCREEN_ROW
-       call DrawRectangle
+       call Draw_Rectangle
 
 
         mov bp,ArtistString
@@ -442,7 +442,7 @@ DrawPlayScreen:
         int 10h
 ret
 
-RestorePlayScreen:
+Restore_PlayScreen:
        push es
        push 0xb800
        pop es
@@ -460,7 +460,7 @@ RestorePlayScreen:
        pop es
 ret
 
-FillTimeScreen:
+Fill_TimeScreen:
        push es
 
        push 0xb800
@@ -505,7 +505,7 @@ FillTimeScreen:
        pop es
 ret
 
-RedrawTimeLine:
+Redraw_TimeLine:
        push es
 
        push 0xb800
@@ -527,7 +527,7 @@ RedrawTimeLine:
        pop es
 ret
 
-ClearTimeLine:
+Clear_TimeLine:
        push es
 
        push 0xb800
@@ -552,9 +552,9 @@ ShowError:
         push ax bx cx dx
 
 
-        call CopyPlayScreen
+        call Copy_PlayScreen
         push 4F00h PLAYSCREEN_LINE+PLAYSCREEN_WIDTH PLAYSCREEN_ROW+PLAYSCREEN_HEIGHT PLAYSCREEN_LINE PLAYSCREEN_ROW
-        call DrawRectangle
+        call Draw_Rectangle
 
         mov bp,sp
         mov bp,[bp+10]
@@ -585,6 +585,6 @@ ShowError:
 
          jmp Error_Key_Looper
          Esc_Key_Error:
-         call RestorePlayScreen
+         call Restore_PlayScreen
          pop  dx cx bx ax
 ret 2

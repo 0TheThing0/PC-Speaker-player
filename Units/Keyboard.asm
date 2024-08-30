@@ -1,4 +1,4 @@
-ProcessKeyboard:
+Process_Keyboard:
    mov ah,01h
    int 16h
    jz _NoKey
@@ -52,7 +52,7 @@ ProcessKeyboard:
 
     _PlayPlaylist:
         mov cl,0
-        call PlayPlaylistFile
+        call Play_PlaylistFile
         jmp _NoKey
 
     Esc_Key:
@@ -74,7 +74,7 @@ DriveWindowKey:
       jmp _NoKey_DW
 
       Left_Key_DW:
-        call DrawChooseDrive
+        call Draw_ChooseDrive
         mov al,[CurrentDrivePos]
         dec al
         cmp al,-1
@@ -84,12 +84,12 @@ DriveWindowKey:
         _No_Dec_Row_DW:
 
         mov [CurrentDrivePos],al
-        call DrawChooseDrive
+        call Draw_ChooseDrive
         jmp _NoKey_DW
 
 
       Right_Key_DW:
-        call DrawChooseDrive
+        call Draw_ChooseDrive
         mov al,[CurrentDrivePos]
         inc al
         cmp al,[DrivesAmount]
@@ -98,7 +98,7 @@ DriveWindowKey:
         _No_Inc_Row_DW:
 
         mov [CurrentDrivePos],al
-        call DrawChooseDrive
+        call Draw_ChooseDrive
         jmp _NoKey_DW
 
        Enter_Key_DW:
@@ -125,9 +125,9 @@ DriveWindowKey:
             mov [CurrentDrive],dh
         NoDriveError:
 
-        call CreateBaseDirPath
-        call OpenDirectory
-        call DrawChooseLine
+        call Create_BaseDirPath
+        call Open_Directory
+        call Draw_ChooseLine
         jmp _NoKey_DW
 
       _NoKey_DW:
@@ -168,17 +168,17 @@ LeftWindowKey:
         jmp _NoKey_LW
 
     Enter_Key_LW:
-        call ProcessFile
+        call Process_File
         jmp _NoKey_LW
 
     A_Key_LW:
-        call AddFile
+        call Add_File
         jmp _NoKey_LW
 
     ProcessInside_LW:
-        call DrawChooseLine
+        call Draw_ChooseLine
         add word[CurrentFile],ax
-        call DrawChooseLine
+        call Draw_ChooseLine
     _NoKey_LW:
 ret
 
@@ -188,9 +188,9 @@ StepUp_LW:
     je .End
     dec word[FirstShowFile]
     mov [CurrentRow], WINDOW_START_LINE
-    call DrawChooseLine
-    call OutputDirectory
-    call DrawChooseLine
+    call Draw_ChooseLine
+    call Output_Directory
+    call Draw_ChooseLine
     .End:
 ret
 
@@ -201,9 +201,9 @@ StepDown_LW:
     jg .End
     inc word[FirstShowFile]
     mov [CurrentRow], WINDOW_START_LINE
-    call DrawChooseLine
-    call OutputDirectory
-    call DrawChooseLine
+    call Draw_ChooseLine
+    call Output_Directory
+    call Draw_ChooseLine
     .End:
 ret
 
@@ -244,19 +244,19 @@ RightWindowKey:
     Enter_Key_RW:
         mov cl,[FirstShowPlaylistFile]
         add cl,[CurrentPlaylistFile]
-        call PlayPlaylistFile
+        call Play_PlaylistFile
 
 
         jmp _NoKey_RW
 
     R_Key_RW:
-        call RemoveFile
+        call Remove_File
         jmp _NoKey_RW
 
     ProcessInside_RW:
-        call DrawPlaylistLine
+        call Draw_PlaylistLine
         add byte[CurrentPlaylistFile],al
-        call DrawPlaylistLine
+        call Draw_PlaylistLine
     _NoKey_RW:
 ret
 
@@ -265,9 +265,9 @@ StepUp_RW:
     cmp [FirstShowPlaylistFile],0
     je .End
     dec byte[FirstShowPlaylistFile]
-    call DrawPlaylistLine
-    call OutputPlaylist
-    call DrawPlaylistLine
+    call Draw_PlaylistLine
+    call Output_Playlist
+    call Draw_PlaylistLine
     .End:
 ret
 
@@ -277,8 +277,8 @@ StepDown_RW:
     cmp [FirstShowPlaylistFile],al
     jg .End
     inc byte[FirstShowPlaylistFile]
-    call DrawPlaylistLine
-    call OutputPlaylist
-    call DrawPlaylistLine
+    call Draw_PlaylistLine
+    call Output_Playlist
+    call Draw_PlaylistLine
     .End:
 ret

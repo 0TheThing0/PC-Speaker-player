@@ -48,7 +48,7 @@
 ; 0 - 3 'data'
 ; 4 - 7 Size
 
-ReadChunckInfo:
+Read_ChunckInfo:
         add dword[CurrentOffset],8
         mov ax,3f00h
         mov dx,ChunckInfo
@@ -57,7 +57,7 @@ ReadChunckInfo:
         int 21h
 ret
 
-ReadChunckPart:
+Read_ChunckPart:
         add word[CurrentOffset],cx
         adc word[CurrentOffset+2],dx
         mov ax,3f00h
@@ -65,7 +65,8 @@ ReadChunckPart:
         mov bx,[File_handler]
         int 21h
 ret
-CheckWavStructure:
+
+Check_WavStructure:
         test dword[CurrentOffset],1
         jz .Next
            inc dword[CurrentOffset]
@@ -76,7 +77,7 @@ CheckWavStructure:
         mov dx,word[CurrentOffset]
         int 21h
 
-        call ReadChunckInfo
+        call Read_ChunckInfo
         cmp ax,0
         je CheckWavStructureEnd
         cmp dword[ChunckInfo],'RIFF'
@@ -102,7 +103,7 @@ CheckWavStructure:
         RIFF_Process:
                 mov cx,4
                 mov dx,0
-                call ReadChunckPart
+                call Read_ChunckPart
                 cmp dword[TempInfoBuffer],'WAVE'
                 je .Next
                 ;!!!!ERROR
@@ -114,10 +115,10 @@ CheckWavStructure:
         fmt_Process:
                 mov dx,word[ChunckInfo+6]
                 mov cx,word[ChunckInfo+4]
-                call ReadChunckPart
+                call Read_ChunckPart
 
                 mov ax,word[TempInfoBuffer+4]
-                cmp ax,22050
+                cmp ax,ACCEPTABLE_RATE
                 je .Next
                    mov [CorrectFile],1
                 .Next:
@@ -128,7 +129,7 @@ CheckWavStructure:
         LIST_Process:
                 mov cx,4
                 mov dx,0
-                call ReadChunckPart
+                call Read_ChunckPart
                 cmp dword[TempInfoBuffer],'INFO'
                 je .Next
                 ;!!!!ERROR
@@ -205,7 +206,7 @@ CheckWavStructure:
         jmp ProcessNext
 
         ProcessNext:
-        jmp CheckWavStructure
+        jmp Check_WavStructure
 
 CheckWavStructureEnd:
 ret

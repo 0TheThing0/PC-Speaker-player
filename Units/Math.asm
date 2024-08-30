@@ -54,7 +54,7 @@ RandomNumber:
         ;Res - in ax
 ret
 
-InitializeArray:
+Initialize_Array:
 mov dl,cl
 mov cl,[CurrentPlaylistAmount]
 mov bx,PlayOrder

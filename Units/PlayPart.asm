@@ -1,4 +1,4 @@
-PlayMusic:
+Play_Music:
 push cx
 mov [CurrentOffset],0
 mov [CorrectFile],2
@@ -18,7 +18,7 @@ mov cx,7
 rep movsb
 
 
-call CheckWavStructure
+call Check_WavStructure
 cmp [CorrectFile],0
 je .Next
       push OpenFileError
@@ -45,7 +45,7 @@ shr dword[TimeInSeconds],1
 call Count_Time
 
 mov di,PLAYSCREEN_START+(60+160*6)
-call FillTimeScreen
+call Fill_TimeScreen
 
 mov di,FullTime
 mov si,TimeInSeconds
@@ -54,9 +54,9 @@ movsd
 mov [TimeInSeconds],0
 call Count_Time
 mov di,PLAYSCREEN_START+(2+160*6)
-call FillTimeScreen
-call ClearTimeLine
-call RedrawTimeLine
+call Fill_TimeScreen
+call Clear_TimeLine
+call Redraw_TimeLine
 
 ;Counting sound coeff
 call Count_Sound_Coeff
@@ -142,7 +142,7 @@ call IRQ_Restore
 
 call Restore_PIT
 
-call RestorePlayScreen
+call Restore_PlayScreen
 IncorrectFile:
 call Close_File
 pop cx

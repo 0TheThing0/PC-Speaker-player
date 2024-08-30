@@ -150,7 +150,9 @@ OutputDrives:
        jne DrawLoop
        pop es
 ret
+
 Empty_INT_24H:
+;This function is very dangerous, but i use it to read all drives on my PC
 iret
 
 Remove_INT_24H:

@@ -20,9 +20,10 @@ IRQ_Player:
            inc dword[TimeInSeconds]
            call Count_Time
            mov di,PLAYSCREEN_START+(2+160*6)
-           call FillTimeScreen
-           call RedrawTimeLine
+           call Fill_TimeScreen
+           call Redraw_TimeLine
        .Next:
+
        ;Getting current offset
        mov si,[es:oMusicBuffer]
        cmp si,[es:ReadBytesAmount]
@@ -42,12 +43,11 @@ IRQ_Player:
 
 ReadNote:
         mov ds,[es:sMusicBuffer]
-        ; I'm not sure in lodsw. SOMETHING STRANGE
         mov ax,[ds:si]
         add [es:oMusicBuffer],2
 
         ;Music counting
-        ;TO DO: Redo + filter
+        ;TO DO: Redo
         fild word[ds:si]
         fiadd [es:Mid]
         fdivr [es:MainCoeff]
@@ -72,8 +72,8 @@ ReadNote:
 _AlreadyInclude:
         mov al,0b6h
         out 43h,al
-        ; Делитель для 1193181 для получения частоты 1193181/x Гц
-        ;~100Гц (0x2e9b) ~22050Гц(0036h)
+        ; пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ 1193181 пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ 1193181/x пїЅпїЅ
+        ;~100пїЅпїЅ (0x2e9b) ~22050пїЅпїЅ(0036h)
 
         mov bx,[es:Value]
         mov al,bl
@@ -130,11 +130,11 @@ Programming_PIT:
         mov dx,ax
 
         mov al,34h
-        ;0011 0100 ?? разобраться, почему 34
+        ;0011 0100 ?? пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ 34
         ;1011 0110
         out 43h,al
-        ; Делитель для 1193181 для получения частоты 1193181/x Гц
-        ;~100Гц (0x2e9b) ~22050Гц(0036h)
+        ; пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ 1193181 пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ 1193181/x пїЅпїЅ
+        ;~100пїЅпїЅ (0x2e9b) ~22050пїЅпїЅ(0036h)
         mov al,dl
         out 40h,al
         mov al,dh
@@ -144,11 +144,11 @@ ret
 
 Restore_PIT:
         mov al,34h
-        ;0011 0100 ?? разобраться, почему 34
+        ;0011 0100 ?? пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ 34
         ;1011 0110
         out 43h,al
-        ; Делитель для 1193181 для получения частоты 1193181/x Гц
-        ;~100Гц (0x2e9b) ~22050Гц(0036h)
+        ; пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ 1193181 пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ 1193181/x пїЅпїЅ
+        ;~100пїЅпїЅ (0x2e9b) ~22050пїЅпїЅ(0036h)
         mov al,0FFh
         out 40h,al
         out 40h,al

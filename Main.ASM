@@ -30,14 +30,17 @@ KeyPoints_SIZE = KEY_POINTS_AMOUNT*FileRecInfo_SIZE
 
 
 ;MUSIC
-BASE_HEAR_SOUND = 30000
-BASE_SAMPLE_VALUE = 1234ddh
-BASE_SAMPLE_SIZE = 65535
+BASE_HEAR_SOUND = 30000  ;This value is "magical". Depending on rate of audiofile this value should be changed
+                         ; For 44100 Hz it's around 50000.
+BASE_SAMPLE_VALUE = 1234ddh ;Rate of PIT
+BASE_SAMPLE_SIZE = 65535 ;Amount of levels of sample
 SIZE_OFFSET = 4
+
+;There values are used for filter, but this is not required
 BASE_A_COEF = 0.1
 BASE_NA_COEF = 1-BASE_A_COEF
 
-BLOCK_SIZE_IN_BYTES = 64000
+BLOCK_SIZE_IN_BYTES = 64000 ; Size of block to load
 BLOCK_SIZE_IN_CHUNKS = BLOCK_SIZE_IN_BYTES/16
 BLOCK_SIZE_IN_WORD = BLOCK_SIZE_IN_BYTES/2
 
@@ -47,6 +50,7 @@ TIME_COEFF = 0.0322580645
 TRACK_AMOUNT = 50
 FILEPATH_LENGTH = 256
 ALLOCATE_PLAYLIST_MEMORY = TRACK_AMOUNT * FILEPATH_LENGTH /16
+ACCEPTABLE_RATE = 22050
 
 ;PlayScreen
 PLAYSCREEN_ROW = 8
@@ -64,13 +68,13 @@ and [old_state], 1111_1110_1111_1111b
 fldcw [old_state]
 
 ;Allocating memory for buffer
-call SetVideoMode
-call SetTemplate
+call Set_VideoMode
+call Set_Template
 
 call Allocate_Memory
-call AllocatePlaylistMemory
+call Allocate_PlaylistMemory
 
-call GetDTA
+call Get_DTA
 
 mov ah,19h
 int 21h
@@ -82,47 +86,41 @@ call Remove_INT_24H
 call CountDrives
 
 call OutputDrives
-;call DrawChooseDrive
 
-call CreateBaseDirPath
+call Create_BaseDirPath
 
 
-call OpenDirectory
-;call DrawChooseLine
+call Open_Directory
 
 MainProcess:
-        call ProcessKeyboard
+        call Process_Keyboard
 cmp [EndProg],0
 je MainProcess
 
 call Restore_INT_24H
-call RestoreVideoMode
+call Restore_VideoMode
 
 ;Asking for memory restoration
-call Restore_memory
+call Restore_Memory
 ret
 
-include "Units\Metadata.c"
-include 'Units\Keyboard.c'
-include 'Units\Drives.c'
-include 'Units\VideoInclude.c'
-include 'Units\FileManage.c'
-include "Units\DataLoader.c"
-include "Units\Interrupts.c"
-include "Units\Math.c"
-include 'Units\PlayPart.c'
+include "Units\Metadata.asm"
+include 'Units\Keyboard.asm'
+include 'Units\Drives.asm'
+include 'Units\VideoInclude.asm'
+include 'Units\FileManage.asm'
+include "Units\DataLoader.asm"
+include "Units\Interrupts.asm"
+include "Units\Math.asm"
+include 'Units\PlayPart.asm'
 
 include 'Units\Keyboard.di'
 include 'Units\Drives.di'
 include 'Units\VideoInclude.di'
 include 'Units\FileManage.di'
 include 'Units\PlayPart.di'
-
-
 include "Units\Interrupts.di"
 include "Units\DataLoader.di"
-
-
 
 
 virtual at 0

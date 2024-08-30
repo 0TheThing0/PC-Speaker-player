@@ -44,10 +44,8 @@ push bx
         ;!!! Just to be sure that cs=es (but it should be)
         push cs
         pop es
-        ;
         int 21h
         ;in ax - error code, bx - largest block avaible
-        ;Why should I move stack DOWN???!!
 
         ;48h - allocate memory block, bx - avaible size in chunks
         mov ah,48h
@@ -65,7 +63,7 @@ push bx
 pop bx
 ret
 
-Restore_memory:
+Restore_Memory:
         push es
         mov ah,49h
         mov es,[sMusicBuffer]
@@ -78,7 +76,7 @@ Restore_memory:
 ret
 
 
-AllocatePlaylistMemory:
+Allocate_PlaylistMemory:
 push bx
         ;48h - allocate memory block, bx - avaible size in chunks
         mov ah,48h

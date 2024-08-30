@@ -1,4 +1,4 @@
-GetDTA:
+Get_DTA:
         push bx es
         mov ah,2fh
         int 21h
@@ -8,8 +8,8 @@ GetDTA:
         pop es bx
 ret
 
-OpenDirectory:
-        call CountDirectoryFiles
+Open_Directory:
+        call Count_DirectoryFiles
 
         ;Counting space between key files
         mov dx,0
@@ -21,7 +21,7 @@ OpenDirectory:
         mov ax,32
         .JustAdd:
         mov [KeyPointsSpace],ax
-        ;
+        
 
         mov [CurrentFile], 0
         mov [FirstShowFile], 0
@@ -36,11 +36,11 @@ OpenDirectory:
         call AddToPointKeys
 
 
-        call OutputDirectory
-        call DrawChooseLine
+        call Output_Directory
+        call Draw_ChooseLine
 ret
 
-CreateBaseDirPath:
+Create_BaseDirPath:
         push di si
 
         mov al,[CurrentDrive]
@@ -77,8 +77,8 @@ CreateBaseDirPath:
         pop si di
 ret
 
-OpenNextDir:
-        call DrawChooseLine
+Open_NextDir:
+        call Draw_ChooseLine
         mov di,[CurrentDirStart]
         ;BackSlashSearch:
         ;cmp byte[di],'\'
@@ -105,11 +105,11 @@ OpenNextDir:
         mov [PrevDirPos],ax
         mov ax,[FirstShowFile]
         mov [PrevHeadDirPos],ax
-        call OpenDirectory
+        call Open_Directory
 ret
 
-OpenPrevDir:
-        call DrawChooseLine
+Open_PrevDir:
+        call Draw_ChooseLine
         mov di,[CurrentDirStart]
         dec di
         BackSlashSearch:
@@ -121,8 +121,8 @@ OpenPrevDir:
         LoopEnd:
         mov [CurrentDirStart],di
 
-        call OpenDirectory
-        call DrawChooseLine
+        call Open_Directory
+        call Draw_ChooseLine
         mov ax,[PrevDirPos]
         mov [CurrentFile],ax
         mov ax,[PrevHeadDirPos]
@@ -132,11 +132,11 @@ OpenPrevDir:
         mov [PrevDirPos],0
         mov [PrevHeadDirPos],0
 
-        call OutputDirectory
-        call DrawChooseLine
+        call Output_Directory
+        call Draw_ChooseLine
 ret
 
-CountDirectoryFiles:
+Count_DirectoryFiles:
         push di si cx dx bx
         mov bx,0
 
@@ -173,9 +173,9 @@ CountDirectoryFiles:
         pop bx dx cx si di
         ret
 
-OutputDirectory:
+Output_Directory:
         push bx cx dx
-        call ClearWindow
+        call Clear_Window
         ;Getting first file
         mov bx,[FirstShowFile]
         mov ax,bx
@@ -236,7 +236,7 @@ OutputDirectory:
                 mov [StringLength],cx
                 ;!!!!
 
-                call WriteString
+                call Write_String
 
                 _NoOutput:
                 pop bx
@@ -269,7 +269,7 @@ AddToPointKeys:
         pop cx bx si di ds
 ret
 
-ProcessFile:
+Process_File:
        ;REDO!!!
        push ds
 
@@ -309,18 +309,18 @@ ProcessFile:
        jmp IS_DIR
 
        IS_DIR:
-          call OpenNextDir
+          call Open_NextDir
           jmp EndProcessFile
        IS_BACK_DIR:
-          call OpenPrevDir
+          call Open_PrevDir
           jmp EndProcessFile
        NO_DIR:
-          call PlayFile
+          call Play_File
 
        EndProcessFile:
 ret
 
-AddFile:
+Add_File:
        cmp [CurrentPlaylistAmount],TRACK_AMOUNT
        jb .Continue
            push FilesOverflowError
@@ -395,7 +395,7 @@ AddFile:
           jae _NoPlaylistAdd
           PlaylistOutput:
                 mov bl,[CurrentPlaylistAmount]
-                call WriteAddString
+                call Write_AddString
 
            _NoPlaylistAdd:
            inc byte[CurrentPlaylistAmount]
@@ -403,7 +403,7 @@ AddFile:
 ret
 
 
-RemoveFile:
+Remove_File:
         cmp [CurrentPlaylistAmount],0
         je RemoveFileEnd
           push ds es
@@ -432,14 +432,14 @@ RemoveFile:
 
         pop es ds
         dec [CurrentPlaylistAmount]
-        call DrawPlaylistLine
-        call OutputPlaylist
-        call DrawPlaylistLine
+        call Draw_PlaylistLine
+        call Output_Playlist
+        call Draw_PlaylistLine
         RemoveFileEnd:
 ret
 
 
-PlayFile:
+Play_File:
         mov di,[CurrentDirStart]
 
         mov al,'\'
@@ -457,10 +457,10 @@ PlayFile:
         ;Openning file
         mov dx,CurrentDir
         call Open_File
-        call PlayMusic
+        call Play_Music
 ret
 
-PlayPlaylistFile:
+Play_PlaylistFile:
         cmp cl,[CurrentPlaylistAmount]
         jae PlayPlaylistFileEnd
 
@@ -469,7 +469,7 @@ PlayPlaylistFile:
            cmp [CurrentPlaylistAmount],1
            je .Next
            call RandomInitialize
-           call InitializeArray
+           call Initialize_Array
            mov bx,[OrderPos]
            mov cl,byte[bx]
         .Next:
@@ -488,7 +488,7 @@ PlayPlaylistFile:
                 mov ds,[PlaylistBuffer]
                 call Open_File
                 pop ds
-                call PlayMusic
+                call Play_Music
                 pop cx
                 cmp [EndPlaylist],1
                 je PlayPlaylistFileEnd
@@ -520,13 +520,13 @@ PlayPlaylistFile:
         PlayPlaylistFileEnd:
 ret
 
-OutputPlaylist:
+Output_Playlist:
         push bx cx dx
         mov al,[CurrentColumn]
         mov ah,[CurrentRow]
         mov [CurrentColumn],WINDOW_RIGHT_COLUMN
         mov [CurrentRow],WINDOW_START_LINE
-        call ClearWindow
+        call Clear_Window
         mov [CurrentColumn],al
         mov [CurrentRow],ah
         ;Getting first file
@@ -535,7 +535,7 @@ OutputPlaylist:
         OutputPlaylistLooper:
                 cmp bl,[CurrentPlaylistAmount]
                 jae OutputPlaylistFinal
-                call WriteAddString
+                call Write_AddString
                 inc bl
         loop OutputPlaylistLooper
         OutputPlaylistFinal:
